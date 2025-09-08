@@ -1,0 +1,21 @@
+/* Header scroll state overrides */
+.header-section.header-fixed .custom-nav > .menu-item > button,
+.header-section.header-fixed .custom-nav a,
+.header-section.header-fixed .right-area .n4-color,
+.header-section.header-fixed .sub-menu a,
+.header-section.header-fixed .menu-link a,
+.header-section.header-fixed .menu-item > button {
+  color: #000 !important;
+}
+
+.header-section.header-fixed .ph,
+.header-section.header-fixed i,
+.header-section.header-fixed .nav-brand img {
+  filter: none;
+}
+
+/* Optional: ensure dropdown backgrounds remain readable */
+.header-section.header-fixed .sub-menu {
+  background-color: #fff;
+}
+

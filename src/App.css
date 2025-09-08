@@ -1,0 +1,59 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  .modal-overlay.show {
+    opacity: 1;
+  }
+  .modal {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .modal-enter {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .modal-exit {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  .no-scroll {
+    overflow: hidden;
+  }
+  /* Listings page enhancements */
+  .filter-panel{position:sticky;top:110px}
+  .car-card{border:1px solid var(--glass-300);background:var(--glass-100);transition:transform .2s ease, box-shadow .2s ease}
+  .car-card:hover{transform:translateY(-2px);box-shadow:var(--box-shadow-p2)}
+  .car-card-media{position:relative;aspect-ratio:16/10;background:var(--n1-2nd-bg-color)}
+  .car-card-media img{width:100%;height:100%;object-fit:cover;display:block}
+  .car-card-overlay{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px;pointer-events:none;background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 60%)}
+  .year-badge{background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:2px 8px;font-size:12px}
+  .chips{display:flex;gap:6px}
+  .chip{background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:2px 8px;font-size:12px}
+  .car-card-body{padding:14px}
+  .car-card-body .title{margin:0 0 6px 0}
+  .car-card-body .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+  .car-card-body .actions{display:flex;gap:8px;opacity:0;transition:opacity .2s ease}
+  .car-card-body .btn{border-radius:999px;padding:6px 12px;font-size:14px}
+  .car-card-body .btn.primary{background:rgba(var(--p1),1);color:#fff}
+  .car-card-body .btn.ghost{border:1px solid var(--glass-300)}
+  .car-card:hover .actions .btn.primary{box-shadow:var(--box-shadow-p1)}
+  .car-card:hover .actions{opacity:1}
+  
+  /* Hero background subtle gradient overlay */
+  .listing-hero{background:linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0) 100%)}
+
+  /* Mobile drawer for filters */
+  @media(max-width: 991px){
+    .filter-panel{position:fixed;inset:0 0 0 auto;width:86%;max-width:420px;transform:translateX(100%);z-index:1000;background:#fff;overflow:auto}
+    .filter-panel.open{transform:translateX(0)}
+  }
+  

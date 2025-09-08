@@ -1,0 +1,752 @@
+/* Custom Swiper Styles for Car Auction Cards */
+
+/* Makes carousel styling */
+.makes-carousel .swiper-slide {
+  height: auto;
+}
+
+.makes-carousel .single-item {
+  height: 100%;
+  min-height: 250px;
+}
+
+.makes-carousel .bg-gradient-to-t {
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
+}
+
+/* Categories carousel styling */
+.categories-carousel .swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+.categories-carousel .category-card {
+  height: 280px;
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.categories-carousel .category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.categories-carousel .overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%) !important;
+}
+
+.categories-carousel .icon-container {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure swiper slides are visible */
+.categories-carousel {
+  padding-bottom: 20px;
+  min-height: 320px;
+}
+
+.categories-carousel .swiper-wrapper {
+  display: flex;
+  min-height: 300px;
+}
+
+.categories-carousel .swiper-slide {
+  opacity: 1 !important;
+  transform: none !important;
+  display: flex !important;
+  flex-shrink: 0;
+}
+
+/* Force visibility for debugging */
+.categories-carousel .swiper-slide .category-card {
+  background-color: #f0f0f0;
+  border: 2px solid #ddd;
+  min-height: 280px;
+}
+
+.categories-carousel .swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+/* Navigation buttons styling */
+.makes-prev, .makes-next, .categories-prev, .categories-next {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.makes-prev:hover, .makes-next:hover, .categories-prev:hover, .categories-next:hover {
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Pagination styling */
+.makes-pagination .swiper-pagination-bullet,
+.categories-pagination .swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background: #ccc;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.makes-pagination .swiper-pagination-bullet-active,
+.categories-pagination .swiper-pagination-bullet-active {
+  background: var(--p1-color, #ff6b35);
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Auction type cards styling */
+.auction-type-card {
+  transition: all 0.3s ease;
+}
+
+.auction-type-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Object fit for images */
+.object-cover {
+  object-fit: cover;
+}
+
+/* Brand Cards Hover Effects */
+.brand-card {
+  transition: all 0.3s ease;
+}
+
+.brand-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.brand-card .overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.brand-card:hover .overlay {
+  opacity: 1;
+}
+
+/* Auction Type Cards Enhanced */
+.auction-type-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.auction-type-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.auction-type-hover:hover .auction-type-overlay {
+  opacity: 1;
+}
+
+/* Vintage Car Shadow Effect */
+.vintage-car-shadow {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.vintage-car-shadow:hover {
+  transform: scale(1.02);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Overlay Badge Animation */
+.overlay-badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Features List Styling */
+.features-list .d-flex:hover {
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+}
+
+/* Process Steps Styling */
+.process-steps .step-number {
+  transition: all 0.3s ease;
+}
+
+.process-steps .d-flex:hover .step-number {
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Pricing Highlight Box */
+.pricing-highlight {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.pricing-highlight:hover {
+  border-color: var(--p1-color);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Hover Effects Enhanced */
+.box-style:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Category Overlay Enhanced */
+.category-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+}
+
+/* How It Works Section Enhancements */
+.image-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-overlay {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.image-wrapper:hover .image-overlay {
+  opacity: 1;
+}
+
+.floating-element {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.feature-card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.feature-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-color: var(--p1-color);
+}
+
+.icon-wrapper {
+  transition: all 0.3s ease;
+}
+
+.feature-hover:hover .icon-wrapper {
+  transform: scale(1.1);
+}
+
+/* Selling Section Enhancements */
+.pricing-highlight {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-highlight:hover {
+  border-color: var(--p1-color);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.price-circle {
+  transition: all 0.3s ease;
+}
+
+.pricing-item:hover .price-circle {
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.success-note {
+  border: 1px solid var(--p4-color);
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--p4-color); }
+  50% { border-color: rgba(var(--p4-color-rgb), 0.5); }
+}
+
+/* Steps Container Enhancements */
+.steps-container {
+  position: relative;
+}
+
+.step-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.step-item:hover {
+  transform: translateX(10px);
+}
+
+.step-circle {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.step-item:hover .step-circle {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.step-icon {
+  transition: all 0.3s ease;
+}
+
+.step-item:hover .step-icon {
+  transform: scale(1.1);
+  background-color: var(--p1-2nd-bg-color);
+}
+
+.step-connector {
+  background: linear-gradient(to bottom, var(--p1-color) 0%, rgba(var(--p1-color-rgb), 0.3) 100%);
+  animation: flow 2s linear infinite;
+}
+
+@keyframes flow {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* Button Enhancements */
+.btn-area a {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-area a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-area a:hover::before {
+  left: 100%;
+}
+
+.btn-area a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced Typography */
+.lh-1 { line-height: 1 !important; }
+.lh-base { line-height: 1.5 !important; }
+
+/* Shadow Enhancements */
+.shadow-lg {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Auction Types Section Improvements */
+.auction-type-card {
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.auction-type-card:hover {
+  border-color: var(--p1-color);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.auction-type-overlay {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* Enhanced Category Cards */
+.category-card-enhanced {
+  border: 2px solid transparent;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.category-card-enhanced:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--p1-color);
+}
+
+.gradient-overlay {
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0) 0%, 
+    rgba(0, 0, 0, 0.1) 40%, 
+    rgba(0, 0, 0, 0.4) 70%, 
+    rgba(0, 0, 0, 0.8) 100%);
+  transition: all 0.3s ease;
+}
+
+.category-card-enhanced:hover .gradient-overlay {
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0.1) 0%, 
+    rgba(0, 0, 0, 0.2) 40%, 
+    rgba(0, 0, 0, 0.5) 70%, 
+    rgba(0, 0, 0, 0.9) 100%);
+}
+
+.category-badge {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.content-wrapper {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.category-card-enhanced:hover .content-wrapper {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.btn-enhanced {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.2) 100%);
+  border: 1px solid var(--p1-color);
+  transition: all 0.3s ease;
+}
+
+.btn-enhanced:hover {
+  background: var(--p1-color);
+  transform: scale(1.05);
+}
+
+.btn-enhanced:hover span {
+  color: white !important;
+}
+
+/* Navigation Button Enhancements */
+.categories-prev, .categories-next {
+  width: 55px;
+  height: 55px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.categories-prev:hover, .categories-next:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+/* Pagination Enhancements */
+.categories-pagination .swiper-pagination-bullet {
+  width: 15px;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  margin: 0 5px;
+}
+
+.categories-pagination .swiper-pagination-bullet-active {
+  background: var(--p1-color);
+  opacity: 1;
+  transform: scale(1.3);
+  box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+}
+
+/* Color Variables Support */
+:root {
+  --p1-color-rgb: 255, 107, 53;
+  --p4-color-rgb: 76, 175, 80;
+}
+
+/* Premium Membership Section Styles */
+.premium-membership {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced Membership Card */
+.membership-card-wrapper {
+  position: relative;
+}
+
+.membership-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.membership-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 35px 60px rgba(215, 0, 7, 0.2), 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced Badge */
+.membership-badge-pill {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #D70007 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+}
+
+.membership-badge-pill:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 12px 30px rgba(215, 0, 7, 0.2) !important;
+}
+
+/* Enhanced BBC Logo */
+.logo-text-main {
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 900;
+  color: white;
+  text-shadow: 4px 4px 8px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,0.4);
+  letter-spacing: 4px;
+  line-height: 1;
+  position: relative;
+  animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+.logo-text-main::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+.brand-name {
+  font-size: clamp(1.4rem, 3vw, 2.2rem) !important;
+  line-height: 1.1 !important;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.7) !important;
+  letter-spacing: 1.5px !important;
+  margin-bottom: 8px !important;
+}
+
+.brand-subtitle {
+  font-size: clamp(1.1rem, 2.5vw, 1.8rem) !important;
+  line-height: 1.1 !important;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.6) !important;
+  letter-spacing: 1px !important;
+  opacity: 0.95;
+}
+
+.decorative-line {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
+
+@keyframes logoGlow {
+  0% { text-shadow: 4px 4px 8px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,0.4); }
+  100% { text-shadow: 4px 4px 8px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.3); }
+}
+
+.membership-badge .badge {
+  transition: all 0.3s ease;
+}
+
+.membership-badge:hover .badge {
+  transform: scale(1.05);
+}
+
+.brand-logo .logo-text {
+  position: relative;
+}
+
+.brand-logo .logo-text::before {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  border-radius: 2px;
+}
+
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.benefit-item {
+  transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+  transform: translateX(5px);
+}
+
+.benefit-item:hover .icon-circle {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(215, 0, 7, 0.3);
+}
+
+.membership-cta-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.membership-cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.membership-cta-btn:hover::before {
+  left: 100%;
+}
+
+.membership-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(215, 0, 7, 0.4);
+  background-color: #B50006;
+}
+
+.decorative-pattern {
+  animation: float 6s ease-in-out infinite;
+}
+
+.decorative-pattern:nth-child(2) {
+  animation-delay: -3s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  50% { transform: translateY(-5px) rotate(0deg); }
+  75% { transform: translateY(-15px) rotate(-1deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .categories-carousel .category-card {
+    height: 220px;
+  }
+  
+     .membership-card {
+     margin-bottom: 2rem;
+     min-height: 450px !important;
+   }
+   
+   .logo-text-main {
+     font-size: 3rem !important;
+     letter-spacing: 2px !important;
+   }
+   
+   .brand-name {
+     font-size: 1.3rem !important;
+   }
+   
+   .brand-subtitle {
+     font-size: 1.1rem !important;
+   }
+  
+  .benefits-section h4 {
+    font-size: 1.2rem;
+  }
+  
+  .benefit-text {
+    font-size: 0.9rem;
+  }
+  
+  .membership-cta-btn {
+    font-size: 14px;
+    padding: 1rem 1.5rem !important;
+  }
+  
+  .categories-carousel .icon-container {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .makes-prev, .makes-next, .categories-prev, .categories-next {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .fs-two {
+    font-size: 1.8rem !important;
+  }
+  
+  .fs-eight {
+    font-size: 0.9rem !important;
+  }
+  
+  .vintage-car-shadow {
+    height: 300px !important;
+  }
+  
+  .step-number {
+    width: 35px !important;
+    height: 35px !important;
+  }
+}

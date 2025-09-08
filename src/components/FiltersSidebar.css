@@ -1,0 +1,62 @@
+/* Filters Sidebar Styles */
+.filters-sidebar {
+  transition: all 0.3s ease;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.filters-sidebar-container {
+  position: sticky;
+  top: 100px;
+}
+
+/* Custom scrollbar for sidebar */
+.filters-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filters-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+  background: #D70007;
+  border-radius: 10px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #b30005;
+}
+
+/* Form focus styles */
+.filters-sidebar .form-control:focus,
+.filters-sidebar .form-select:focus {
+  border-color: #D70007 !important;
+  box-shadow: 0 0 0 0.2rem rgba(215, 0, 7, 0.25) !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767.98px) {
+  .filters-sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
+    margin-bottom: 2rem;
+  }
+  
+  .filters-sidebar-container {
+    position: relative;
+    top: 0;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .filters-sidebar {
+    position: sticky;
+    top: 100px;
+  }
+}
