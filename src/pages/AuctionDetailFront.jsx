@@ -16,6 +16,7 @@ import {
 import { MdGavel } from "react-icons/md";
 import { HiHome, HiChevronRight } from "react-icons/hi";
 import io from "socket.io-client";
+import { MobileBottomBarDetail } from "../components/MobileBottomBar";
 
 const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
@@ -571,6 +572,20 @@ const AuctionDetailFront = () => {
             </div>
           </div>
         </header>
+
+        <MobileBottomBarDetail
+          onBidPress={() => {
+            const bidSection = document.getElementById("mobile-bid-section");
+            if (bidSection) {
+              bidSection.scrollIntoView({ behavior: "smooth", block: "center" });
+              bidSection.querySelector("input")?.focus();
+            } else {
+              placeBid();
+            }
+          }}
+          auctionName={auction?.carListing?.name || ""}
+          isActive={isActive}
+        />
 
         {/* Main Content */}
         <div className="container-fluid py-5">
@@ -1196,7 +1211,7 @@ const AuctionDetailFront = () => {
 
               {/* Premium Bidding Form */}
               {canBid && (
-                <div className="bg-white rounded-4 shadow-lg mb-4 border-0">
+                <div id="mobile-bid-section" className="bg-white rounded-4 shadow-lg mb-4 border-0">
                   <div className="p-4">
                     <div className="d-flex align-items-center mb-4">
                       <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
@@ -1416,9 +1431,7 @@ const AuctionDetailFront = () => {
                             ? "🏢 Dealer"
                             : "👤 Private Seller"}
                         </span>
-                        <span className="badge bg-primary bg-opacity-20 text-white px-2 py-1 rounded-pill small">
-                          ✅ Verified
-                        </span>
+                       
                       </div>
                     </div>
                     <div className="text-end">

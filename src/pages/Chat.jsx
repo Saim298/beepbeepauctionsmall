@@ -1,13 +1,31 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { FiChevronLeft, FiMenu, FiPaperclip, FiSend, FiSmile } from 'react-icons/fi'
 import io from 'socket.io-client'
 import 'emoji-picker-element'
 import logo from '../image/logo.png'
 import './chat.css'
 import './dashboard.css'
+import { getAuthToken } from '../api/client.js'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+
+const authHeader = () => {
+  const t = getAuthToken()
+  return t ? { Authorization: `Bearer ${t}` } : {}
+}
+
+const jsonAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  ...authHeader(),
+})
+
+const getOtherParticipant = (conv, user) => {
+  if (!conv?.participants || !user) return null
+  const uid = String(user.id)
+  const other = conv.participants.find((p) => String(p._id) !== uid)
+  return other ?? null
+}
 
 const placeholderConversations = [
   {
@@ -62,18 +80,59 @@ const Chat = () => {
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const emojiHostRef = useRef(null)
   const scrollRef = useRef(null)
   const socketRef = useRef(null)
   const [currentUser, setCurrentUser] = useState(null)
-  
+  const [guestMode, setGuestMode] = useState(false)
+
   // Context from navigation state (can be car or part)
   const context = location.state
   const carContext = context && context.carId ? context : null
   const partContext = context && context.partId ? context : null
 
   const activeConvo = useMemo(() => conversations.find(c => c._id === activeId) || conversations[0], [conversations, activeId])
-  const messages = useMemo(() => messagesById[activeId] || [], [messagesById, activeId])
+  const messages = useMemo(() => {
+    const msgs = messagesById[activeId] || []
+    console.log('📨 Messages useMemo - activeId:', activeId, 'messages:', msgs.length)
+    return msgs
+  }, [messagesById, activeId])
+  
+  // Filter conversations based on search query
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations
+    
+    const query = searchQuery.toLowerCase()
+    return conversations.filter(conv => {
+      const otherUser = conv.participants?.find(p => p._id !== currentUser?.id)
+      const userName = otherUser?.name?.toLowerCase() || ''
+      const lastMessage = conv.lastMessage?.text?.toLowerCase() || ''
+      const carName = conv.carListing?.name?.toLowerCase() || ''
+      const partName = conv.sparePart?.name?.toLowerCase() || ''
+      
+      return userName.includes(query) || 
+             lastMessage.includes(query) || 
+             carName.includes(query) || 
+             partName.includes(query)
+    })
+  }, [conversations, searchQuery, currentUser])
+
+  const isOwnListingContext = Boolean(
+    currentUser &&
+      ((partContext && String(partContext.vendorId) === String(currentUser.id)) ||
+        (carContext && String(carContext.vendorId) === String(currentUser.id)))
+  )
+
+  const otherInActive = useMemo(
+    () => getOtherParticipant(activeConvo, currentUser),
+    [activeConvo, currentUser]
+  )
+
+  const isSelfOnlyConversation = useMemo(
+    () => Boolean(currentUser && activeId && activeConvo && !otherInActive),
+    [currentUser, activeId, activeConvo, otherInActive]
+  )
 
   // Initialize user and Socket.IO
   useEffect(() => {
@@ -87,10 +146,12 @@ const Chat = () => {
 
   // Handle context - create/get conversation for car or part
   useEffect(() => {
+    if (guestMode || !currentUser) return
+    if (isOwnListingContext) return
     if ((carContext || partContext) && currentUser) {
       createOrGetConversation()
     }
-  }, [carContext, partContext, currentUser])
+  }, [carContext, partContext, currentUser, guestMode, isOwnListingContext])
 
   // Join active conversation room when activeId changes
   useEffect(() => {
@@ -106,17 +167,45 @@ const Chat = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, activeId])
+  
+  // Debug messages changes
+  useEffect(() => {
+    console.log('📨 Messages changed - activeId:', activeId, 'messages:', messages.length, messages)
+    
+    // Log image messages for debugging
+    messages.forEach(m => {
+      if (m.fileUrl && m.fileType && m.fileType.startsWith('image/')) {
+        console.log('🖼️ Found image message:', {
+          fileName: m.fileName,
+          fileUrl: m.fileUrl,
+          fullUrl: `${API_BASE}${m.fileUrl}`,
+          fileType: m.fileType
+        })
+      }
+    })
+  }, [messages, activeId])
 
   const initializeChat = async () => {
     try {
-      // Get current user info
+      const token = getAuthToken()
+      if (!token) {
+        setGuestMode(true)
+        return
+      }
+      // Get current user info (Bearer token; cookie-only is not used by this app)
       const userResponse = await fetch(`${API_BASE}/api/auth/me`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${token}` }
       })
+      if (!userResponse.ok) {
+        setGuestMode(true)
+        return
+      }
       if (userResponse.ok) {
         const response = await userResponse.json()
         const user = response.user
         setCurrentUser(user)
+        setGuestMode(false)
         
         // Initialize Socket.IO
         console.log('🔴 FRONTEND: Connecting to Socket.IO server at:', API_BASE);
@@ -152,7 +241,7 @@ const Chat = () => {
           console.log('📨 Real-time message received:', messageData.text);
           
           // Skip if this message is from the current user (to prevent duplicates)
-          if (messageData.sender._id === user.id) {
+          if (String(messageData.sender?._id) === String(user.id)) {
             console.log('📨 Skipping own message to prevent duplicate');
             
             // Still update conversation metadata for own messages
@@ -234,8 +323,7 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error)
-      // Redirect to login if not authenticated
-      navigate('/signin')
+      setGuestMode(true)
     } finally {
       setLoading(false)
     }
@@ -260,11 +348,14 @@ const Chat = () => {
         return;
       }
 
+      if (String(requestBody.vendorId) === String(currentUser?.id)) {
+        return
+      }
+      if (!getAuthToken()) return
+
       const response = await fetch(`${API_BASE}/api/chat/conversations`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: jsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify(requestBody)
       })
@@ -297,10 +388,12 @@ const Chat = () => {
   const loadConversations = async () => {
     try {
       const response = await fetch(`${API_BASE}/api/chat/conversations`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: { ...authHeader() }
       })
       if (response.ok) {
         const convos = await response.json()
+        console.log('📨 Loaded conversations:', convos.length)
         setConversations(convos)
         
         // Set first conversation as active if no context
@@ -325,7 +418,8 @@ const Chat = () => {
   const loadMessages = async (conversationId) => {
     try {
       const response = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/messages`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: { ...authHeader() }
       })
       if (response.ok) {
         const msgs = await response.json()
@@ -338,7 +432,8 @@ const Chat = () => {
           [conversationId]: sortedMessages
         }))
         
-        console.log(`Loaded ${sortedMessages.length} messages for conversation ${conversationId}`)
+        console.log(`📨 Loaded ${sortedMessages.length} messages for conversation ${conversationId}`)
+        console.log('📨 Messages:', sortedMessages)
       }
     } catch (error) {
       console.error('Failed to load messages:', error)
@@ -368,7 +463,7 @@ const Chat = () => {
 
   const sendMessage = async () => {
     const text = messageText.trim()
-    if (!text || !activeId || sending) return
+    if (!text || !activeId || sending || guestMode || isSelfOnlyConversation) return
     
     setSending(true)
     const originalText = messageText
@@ -380,9 +475,7 @@ const Chat = () => {
       // Save to database via API
       const response = await fetch(`${API_BASE}/api/chat/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: jsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           conversationId: activeId,
@@ -428,6 +521,7 @@ const Chat = () => {
   }
 
   const handleAttach = () => {
+    if (guestMode || isSelfOnlyConversation) return
     const input = document.createElement('input')
     input.type = 'file'
           input.accept = 'image/*,video/*,.pdf,.doc,.docx,.txt,.zip,.rar,.webp,.bmp,.svg,.mp4,.mov,.avi'
@@ -449,7 +543,7 @@ const Chat = () => {
   }
 
   const uploadAndSendFile = async (file) => {
-    if (!activeId || sending) return;
+    if (!activeId || sending || guestMode || isSelfOnlyConversation) return;
     
     setSending(true);
     
@@ -464,6 +558,7 @@ const Chat = () => {
       const uploadResponse = await fetch(`${API_BASE}/api/chat/upload`, {
         method: 'POST',
         credentials: 'include',
+        headers: { ...authHeader() },
         body: formData
       });
       
@@ -477,9 +572,7 @@ const Chat = () => {
       // Send message with file
       const messageResponse = await fetch(`${API_BASE}/api/chat/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: jsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           conversationId: activeId,
@@ -525,6 +618,7 @@ const Chat = () => {
   const addEmoji = (emoji = '😊') => setMessageText(m => m + ' ' + emoji)
 
   const pickConversation = async (id) => {
+    console.log('📨 Picking conversation:', id)
     setActiveId(id)
     setSidebarOpen(false)
     
@@ -563,6 +657,47 @@ const Chat = () => {
     setPreviewType('')
   }
 
+  if (guestMode) {
+    return (
+      <div className="chat-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0f0f12' }}>
+        <nav className="chat-navbar" style={{ flexShrink: 0 }}>
+          <button type="button" className="nav-back" aria-label="Back" onClick={() => navigate(-1)}>
+            <FiChevronLeft />
+            <span>Back</span>
+          </button>
+          <div className="nav-brand">
+            <img src={logo} alt="Beep Auction" />
+            <span>Beep Beep Auction</span>
+          </div>
+        </nav>
+        <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
+          <div style={{ maxWidth: 400 }}>
+            <h2 style={{ color: '#fff', marginBottom: 12, fontSize: '1.35rem' }}>Sign in to use chat</h2>
+            <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: 24, lineHeight: 1.5 }}>
+              You can view this page, but your conversations and messages are available when you are logged in. We will not redirect you automatically.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link
+                to="/signin"
+                className="pill p1-bg-color d-inline-block px-4 py-2"
+                style={{ textDecoration: 'none', color: '#fff' }}
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/"
+                className="pill ghost d-inline-block px-4 py-2"
+                style={{ textDecoration: 'none', color: 'var(--text, #e8e8ef)' }}
+              >
+                Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="chat-page" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Top website navbar */}
@@ -586,6 +721,8 @@ const Chat = () => {
           <div className="chat-search" style={{ flexShrink: 0, padding: '1rem', borderBottom: '1px solid #e0e0e0' }}>
             <input 
               placeholder="Search conversations…" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
                 width: '100%', 
                 padding: '0.5rem', 
@@ -598,13 +735,13 @@ const Chat = () => {
           <div className="chat-convos" style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
             {loading ? (
               <div className="p-4 text-center">Loading conversations...</div>
-            ) : conversations.length === 0 ? (
+            ) : filteredConversations.length === 0 ? (
               <div className="p-4 text-center text-muted">
-                No conversations yet. Click on a car to start chatting!
+                {searchQuery ? 'No conversations found matching your search.' : 'No conversations yet. Click on a car to start chatting!'}
               </div>
             ) : (
-              conversations.map(conv => {
-                const otherUser = conv.participants?.find(p => p._id !== currentUser?.id)
+              filteredConversations.map(conv => {
+                const otherUser = getOtherParticipant(conv, currentUser)
                 return (
                   <button key={conv._id} className={`convo-item ${activeId === conv._id ? 'active' : ''}`} onClick={() => pickConversation(conv._id)}>
                     <div className="convo-avatar">
@@ -635,13 +772,13 @@ const Chat = () => {
               <div className="peer">
                 <div className="avatar">
                   <img 
-                    src={activeConvo.participants?.find(p => p._id !== currentUser?.id)?.avatarUrl || '/assets/images/user-img-1.webp'} 
-                    alt={activeConvo.participants?.find(p => p._id !== currentUser?.id)?.name} 
+                    src={otherInActive?.avatarUrl || '/assets/images/user-img-1.webp'} 
+                    alt={otherInActive?.name || 'Chat'} 
                   />
                   <span className="presence on"></span>
                 </div>
                 <div className="meta">
-                  <h3>{activeConvo.participants?.find(p => p._id !== currentUser?.id)?.name || 'Chat'}</h3>
+                  <h3>{otherInActive?.name || (isSelfOnlyConversation ? 'You' : 'Chat')}</h3>
                   <span className="status">
                     {activeConvo.carListing?.name && `About: ${activeConvo.carListing.name}`}
                   </span>
@@ -651,6 +788,11 @@ const Chat = () => {
           </header>
 
           <section className="chat-messages" ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+            {isOwnListingContext && (
+              <div className="context-banner bg-warning bg-opacity-25 p-3 mb-3 rounded border border-warning text-dark" style={{ fontSize: 14 }}>
+                You cannot start a chat with yourself on your own listing. Open another user&apos;s product to message them.
+              </div>
+            )}
             {(carContext || partContext) && (
               <div className="context-banner bg-light p-3 mb-3 rounded">
                 <div className="d-flex align-items-center gap-3">
@@ -676,35 +818,59 @@ const Chat = () => {
               </div>
             )}
 
-            {messages.map(m => {
-              const isMe = m.sender?._id === currentUser?.id
-              const time = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              
-              return (
-                <div key={m._id} className={`bubble-row ${isMe ? 'right' : 'left'}`}>
-                  {m.fileUrl ? (
-                    <div className="bubble file animate-in">
-                      {m.fileType && m.fileType.startsWith('image/') ? (
-                        <div className="file-preview">
-                          <img src={`${API_BASE}${m.fileUrl}`} alt={m.fileName} />
+            {messages.length === 0 ? (
+              <div className="text-center text-muted p-4">
+                No messages yet. Start the conversation!
+              </div>
+            ) : (
+              <>
+                {messages.map(m => {
+                  const isMe = String(m.sender?._id) === String(currentUser?.id)
+                  const time = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  
+                  return (
+                    <div key={m._id} className={`bubble-row ${isMe ? 'right' : 'left'}`}>
+                    {m.fileUrl ? (
+                      <div className="bubble file animate-in">
+                        {m.fileType && m.fileType.startsWith('image/') ? (
+                          <div className="file-preview">
+                            <img 
+                              src={`${API_BASE}${m.fileUrl}`} 
+                              alt={m.fileName} 
+                              style={{
+                                maxWidth: '200px',
+                                maxHeight: '200px',
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => window.open(`${API_BASE}${m.fileUrl}`, '_blank')}
+                              onLoad={() => console.log('✅ Image loaded successfully:', `${API_BASE}${m.fileUrl}`)}
+                              onError={(e) => {
+                                console.error('❌ Failed to load image:', `${API_BASE}${m.fileUrl}`);
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="file-generic">📎</div>
+                        )}
+                        <a className="file-name" href={`${API_BASE}${m.fileUrl}`} target="_blank" rel="noreferrer">
+                          {m.fileName || 'Attachment'}
+                        </a>
+                        <span className="time">{time}</span>
+                      </div>
+                    ) : (
+                        <div className="bubble animate-in">
+                          <p>{m.text || m.content?.text || 'No message content'}</p>
+                          <span className="time">{time}</span>
                         </div>
-                      ) : (
-                        <div className="file-generic">📎</div>
                       )}
-                      <a className="file-name" href={`${API_BASE}${m.fileUrl}`} target="_blank" rel="noreferrer">
-                        {m.fileName || 'Attachment'}
-                      </a>
-                      <span className="time">{time}</span>
                     </div>
-                  ) : (
-                    <div className="bubble animate-in">
-                      <p>{m.text}</p>
-                      <span className="time">{time}</span>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                  )
+                })}
+              </>
+            )}
           </section>
 
           <footer className="chat-input" style={{ flexShrink: 0, borderTop: '1px solid #e0e0e0', padding: '1rem' }}>
@@ -720,14 +886,19 @@ const Chat = () => {
             <input
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Type a message…"
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
+              placeholder={
+                isSelfOnlyConversation
+                  ? 'You cannot message yourself in this chat…'
+                  : 'Type a message…'
+              }
+              readOnly={isSelfOnlyConversation}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !isSelfOnlyConversation) { e.preventDefault(); sendMessage(); } }}
             />
             <button 
               className="send" 
               aria-label="Send" 
               onClick={sendMessage}
-              disabled={sending || !messageText.trim()}
+              disabled={sending || !messageText.trim() || !activeId || isSelfOnlyConversation}
             >
               {sending ? '...' : <FiSend />}
             </button>

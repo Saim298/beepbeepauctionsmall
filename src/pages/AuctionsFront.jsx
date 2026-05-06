@@ -5,6 +5,7 @@ import { HiHome, HiChevronRight } from "react-icons/hi";
 import { MdGavel } from "react-icons/md";
 import { FiClock, FiUsers, FiDollarSign, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import io from 'socket.io-client';
+import { MobileBottomBarAuctions, MobileFilterSheet, MobileSearchSheet } from "../components/MobileBottomBar";
 
 const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
@@ -237,6 +238,8 @@ const AuctionsFront = () => {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [makes, setMakes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -350,23 +353,144 @@ const AuctionsFront = () => {
     return `${apiBase}${u}`;
   };
 
+  const clearAllFilters = () => {
+    setQ("");
+    setFilters({
+      make: "",
+      auctionType: "",
+      year: "",
+      category: "",
+      priceRange: "",
+      location: "",
+      status: "active",
+    });
+  };
+
   return (
     <div>
-      {/* Listings Navbar */}
-      <ListingsNavbar
-        q={q}
-        setQ={setQ}
-        filters={filters}
-        setFilters={setFilters}
-        makes={makes}
-        models={[]} // We'll handle models differently for auctions
-        categories={categories}
+      <div className="d-none d-lg-block">
+        <ListingsNavbar
+          q={q}
+          setQ={setQ}
+          filters={filters}
+          setFilters={setFilters}
+          makes={makes}
+          models={[]}
+          categories={categories}
+          activeFilterCount={activeFilterCount}
+          isAuction={true}
+          layout="navbar"
+        />
+      </div>
+
+      <MobileBottomBarAuctions
         activeFilterCount={activeFilterCount}
-        isAuction={true}
+        onFilterOpen={() => setMobileFilterOpen(true)}
+        onSearchOpen={() => setMobileSearchOpen(true)}
+      />
+
+      <MobileFilterSheet
+        open={mobileFilterOpen}
+        onClose={() => setMobileFilterOpen(false)}
+        title="Filter Auctions"
+        activeFilterCount={activeFilterCount}
+        onClearAll={clearAllFilters}
+      >
+        <div className="mb-4">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Auction Type</label>
+          <select
+            className="form-select"
+            value={filters.auctionType || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, auctionType: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          >
+            <option value="">All Types</option>
+            <option value="standard">Standard Auctions</option>
+            <option value="reserve">Reserve Auctions</option>
+            <option value="direct_sale">Buy It Now</option>
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Make</label>
+          <select
+            className="form-select"
+            value={filters.make || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, make: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          >
+            <option value="">All Makes</option>
+            {makes.map((m) => <option key={m._id} value={m._id}>{m.name}</option>)}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Category</label>
+          <select
+            className="form-select"
+            value={filters.category || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, category: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          >
+            <option value="">All Categories</option>
+            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Year</label>
+          <select
+            className="form-select"
+            value={filters.year || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, year: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          >
+            <option value="">All Years</option>
+            {Array.from({ length: 20 }, (_, i) => 2024 - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Price Range</label>
+          <select
+            className="form-select"
+            value={filters.priceRange || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, priceRange: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          >
+            <option value="">All Prices</option>
+            <option value="0-50000">$0 - $50K</option>
+            <option value="50000-100000">$50K - $100K</option>
+            <option value="100000-200000">$100K - $200K</option>
+            <option value="200000-500000">$200K - $500K</option>
+            <option value="500000-">$500K+</option>
+          </select>
+        </div>
+
+        <div className="mb-2">
+          <label className="fw-bold mb-2 d-block" style={{ color: "#212529", fontSize: "14px" }}>Location</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter city or state"
+            value={filters.location || ""}
+            onChange={(e) => setFilters((prev) => ({ ...prev, location: e.target.value }))}
+            style={{ border: "2px solid #e9ecef", borderRadius: "10px", padding: "10px 14px" }}
+          />
+        </div>
+      </MobileFilterSheet>
+
+      <MobileSearchSheet
+        open={mobileSearchOpen}
+        onClose={() => setMobileSearchOpen(false)}
+        value={q}
+        onChange={setQ}
       />
       
       {/* Breadcrumb Section */}
-      <section className="py-3 bg-light" style={{ marginTop: '110px' }}>
+      <section className="py-3 bg-light">
         <div className="container-fluid px-3 px-md-4 px-lg-6">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb mb-0 d-flex align-items-center">

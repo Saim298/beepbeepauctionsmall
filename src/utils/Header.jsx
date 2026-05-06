@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  FaGripHorizontal,
+  FaShoppingCart,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import image from "../image/logo.png";
@@ -80,16 +80,6 @@ const Header = () => {
                     </li>
                     <li className="menu-item position-relative">
                       <Link
-                        to="/cart"
-                        className="position-relative pe-5 z-1 slide-second text-uppercase slide-vertical"
-                        aria-label="Menu Button"
-                        data-splitting
-                      >
-                        Cart  
-                      </Link>
-                    </li>
-                    <li className="menu-item position-relative">
-                      <Link
                         to="/about"
                         className="position-relative pe-5 z-1 slide-second text-uppercase slide-vertical"
                         data-splitting
@@ -126,15 +116,16 @@ const Header = () => {
                     <span className="position-relative d-center cus-border border-start box-area box-one only-height"></span>
               
                     <div className="single-item">
-                      <button
-                        type="button"
-                        aria-label="Shopping Button"
+                      <Link
+                        to="/cart"
+                        aria-label="Shopping Cart"
                         className="box-area box-one box-style style-one cus-border border d-center rounded-circle position-relative"
+                        style={{ textDecoration: 'none' }}
                       >
                         <span className="d-center transition fs-five n4-color">
-                          <FaGripHorizontal />
+                          <FaShoppingCart />
                         </span>
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>

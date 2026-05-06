@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../api/client';
 import { FiPackage, FiTruck, FiCheck, FiEye, FiStar, FiClock, FiMapPin, FiX } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import Sidebar from '../../utils/Sidebar.jsx';
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx';
 import '../dashboard.css';
 import StarRating from '../../components/StarRating';
 
@@ -225,8 +225,7 @@ const BuyerOrders = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
             <div style={{ textAlign: 'center' }}>
@@ -235,17 +234,17 @@ const BuyerOrders = () => {
             </div>
         </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     );
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">My Orders</h1>
               <span className="page-subtitle">Track your purchase orders and deliveries</span>
             </div>
@@ -712,7 +711,7 @@ const BuyerOrders = () => {
           </div>
         </div>
       )}
-    </div>
+    </DashboardAppChrome>
   );
 };
 

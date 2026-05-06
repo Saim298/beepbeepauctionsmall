@@ -5,6 +5,7 @@ import FeaturedParts from "../components/frontComponents/FeaturedParts";
 import Footer from "../components/frontComponents/Footer";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../api/client";
+import { MobileBottomBarHome } from "../components/MobileBottomBar";
 
 const Home = () => {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -43,8 +44,9 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="mobile-hide-header">
       <Header />
+      <MobileBottomBarHome />
 
       <Banner />
 
@@ -2139,7 +2141,7 @@ const Home = () => {
         <div className="container-fluid cus-padding">
           <div className="row gy-6 gy-md-0 mb-8 mb-md-15 justify-content-between align-items-end">
             <div className="col-md-8 col-lg-9 col-xl-7 col-xxl-8">
-              <div className="section-area d-grid gap-3 gap-md-4 reveal-single reveal-text text-one">
+              <div className="section-area d-grid gap-3 gap-md-4">
                 <span className="p1-color fs-nine fw-semibold text-uppercase">
                   Fast & Easy Way To Buy Car Products
                 </span>
@@ -2166,7 +2168,7 @@ const Home = () => {
                 </span>
                 <div className="video-bg-thumb d-center ms-8">
                   <a
-                    href="https://www.youtube.com/watch?v=BHACKCNDMW8"
+                    href="https://beepbeepauctions.vercel.app/assets/Beep%20Vintage%20Car-z1Z7kl76.mp4"
                     className="popup-video btn-popup-animation d-center rounded-circle"
                   >
                     <span className="d-center fs-three n1-color z-1">
@@ -2275,7 +2277,7 @@ const Home = () => {
 
                   {/* Description */}
                   <p className="fs-six n5-color lh-base mb-5">
-                    FILLED WITH THE LATEST PART LISTINGS, DEALS,
+                    FILLED WITH THE LATEST PRODUCT LISTINGS, DEALS,
                     <br />
                     AND MAINTENANCE TIPS.
                   </p>
@@ -2374,6 +2376,7 @@ const Home = () => {
       </section>
       {/* <!-- Newsletter Section end --> */}
 
+      <div className="d-block d-lg-none" style={{ height: "80px" }} />
       <Footer />
     </div>
   );

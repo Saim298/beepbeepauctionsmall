@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../../pages/dashboard.css";
-import Sidebar from "../../utils/Sidebar.jsx";
+import { DashboardAppChrome, DashboardMenuButton } from "../../components/DashboardAppChrome.jsx";
 import { getAuthToken } from "../../api/client.js";
 
 const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
@@ -328,12 +328,12 @@ const UserAddSparePart = () => {
   };
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">List Spare Part</h1>
               <span className="page-subtitle">Add your car part to the marketplace</span>
             </div>
@@ -617,7 +617,7 @@ const UserAddSparePart = () => {
           </form>
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   );
 };
 

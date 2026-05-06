@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { FiHome, FiBarChart2, FiTag, FiClock, FiUsers, FiSettings, FiBell, FiLogOut, FiMessageSquare, FiLayers, FiCheckCircle, FiCreditCard, FiPackage, FiTool, FiSearch, FiStar, FiTruck } from 'react-icons/fi'
+import { FiHome, FiBarChart2, FiTag, FiClock, FiUsers, FiSettings, FiBell, FiLogOut, FiMessageSquare, FiLayers, FiCheckCircle, FiCreditCard, FiPackage, FiTool, FiSearch, FiStar, FiTruck, FiX } from 'react-icons/fi'
 import { MdGavel, MdBuild, MdDirectionsCar } from 'react-icons/md'
 import logo from '../image/logo.png'
 import { apiRequest, getAuthToken, clearAuthToken } from '../api/client'
@@ -27,7 +27,7 @@ const userItems = [
   { label: 'Chat', to: '/chat', icon: <FiMessageSquare /> },
 ]
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen = false, onCloseMobile = () => {} }) => {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -62,6 +62,10 @@ const Sidebar = () => {
     load()
   }, [])
 
+  useEffect(() => {
+    onCloseMobile()
+  }, [pathname])
+
   const onLogout = () => {
     clearAuthToken()
     navigate('/signin', { replace: true })
@@ -71,7 +75,11 @@ const Sidebar = () => {
   const brandText = userRole === 'admin' ? 'Beep Admin' : 'Beep Products'
 
   return (
-    <aside className="dashboard-sidebar">
+    <>
+    <aside className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <button className="sidebar-mobile-close" onClick={onCloseMobile} aria-label="Close sidebar">
+        <FiX />
+      </button>
       <div className="brand">
         <img src={logo} alt="Beep Products" />
         <span>{brandText}</span>
@@ -81,7 +89,7 @@ const Sidebar = () => {
         {items.map((i) => {
           const active = pathname.startsWith(i.to)
           return (
-            <Link key={i.label} to={i.to} className={`nav-item ${active ? 'active' : ''}`}>
+            <Link key={i.label} to={i.to} onClick={onCloseMobile} className={`nav-item ${active ? 'active' : ''}`}>
               <span className="icon">{i.icon}</span>
               <span className="text">{i.label}</span>
             </Link>
@@ -90,12 +98,12 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <Link to="#" className="notify">
+        <Link to="#" onClick={onCloseMobile} className="notify">
           <span className="icon"><FiBell /></span>
           <span>Notifications</span>
           <span className="badge dot"></span>
         </Link>
-        <Link to="/dashboard/settings" className="settings">
+        <Link to="/dashboard/settings" onClick={onCloseMobile} className="settings">
           <span className="icon"><FiSettings /></span>
           <span>Settings</span>
         </Link>
@@ -116,6 +124,12 @@ const Sidebar = () => {
 
       <div className="sidebar-gradient" />
     </aside>
+    <button
+      className={`dashboard-sidebar-overlay ${mobileOpen ? 'active' : ''}`}
+      onClick={onCloseMobile}
+      aria-label="Close sidebar overlay"
+    />
+    </>
   )
 }
 

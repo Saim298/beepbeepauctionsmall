@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Sidebar from '../../utils/Sidebar.jsx'
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
 import { FiTrendingUp, FiDollarSign, FiClock, FiAward, FiEye } from 'react-icons/fi'
 import { MdGavel } from 'react-icons/md'
@@ -115,8 +115,7 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
             <div style={{ textAlign: 'center' }}>
@@ -125,17 +124,17 @@ const UserDashboard = () => {
             </div>
           </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     )
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">Auction Dashboard</h1>
               <span className="page-subtitle">Track your bidding activity and wins</span>
             </div>
@@ -383,7 +382,7 @@ const UserDashboard = () => {
           </div>
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   )
 }
 

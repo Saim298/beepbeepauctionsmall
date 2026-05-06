@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Sidebar from '../../utils/Sidebar.jsx'
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import { getAuthToken } from '../../api/client.js'
 import '../dashboard.css'
 
@@ -13,7 +13,7 @@ const MyParts = () => {
   const [sort, setSort] = useState('-createdAt')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const [parts, setParts] = useState([])
+  const [parts, setParts] = useState([])  
   const limit = 12
 
   // Extract image URLs from descriptionHtml
@@ -28,21 +28,30 @@ const MyParts = () => {
     return images;
   };
 
-  // Get images from media array or extract from descriptionHtml
-  const getPartImages = (part) => {
-    if (part?.media && part.media.length > 0) {
-      return part.media.map(media => media.url);
-    }
-    return extractImagesFromHtml(part?.descriptionHtml);
-  };
+  const isImageMedia = (m) => {
+    if (!m?.url) return false
+    if (m.type === 'image') return true
+    if (m.type === 'video') return false
+    return /\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(m.url)
+  }
 
-  // Normalize relative upload paths to absolute URLs
+  // Prefer image files for <img> — first item is often a video, which would break the thumbnail
+  const getPartImageUrls = (part) => {
+    if (part?.media?.length) {
+      const fromMedia = part.media.filter(isImageMedia).map((m) => m.url).filter(Boolean)
+      if (fromMedia.length) return fromMedia
+    }
+    return extractImagesFromHtml(part?.descriptionHtml || '') || []
+  }
+
+  // Normalize relative upload paths to absolute URLs (handles missing slash after API base)
   const toAbsUrl = (u) => {
-    if (!u) return "/assets/images/handpicked-img-1.webp";
-    if (u.startsWith("http") || u.startsWith("data:")) return u;
-    const cleanUrl = u.startsWith("/") ? u : `/${u}`;
-    return `${API}${cleanUrl}`;
-  };
+    if (!u) return "/assets/images/handpicked-img-1.webp"
+    if (u.startsWith("http") || u.startsWith("data:")) return u
+    const base = (API || "").replace(/\/$/, "")
+    const path = u.startsWith("/") ? u : `/${u}`
+    return `${base}${path}`
+  }
 
   useEffect(() => { localStorage.setItem('beep-theme', theme) }, [theme])
   
@@ -125,12 +134,12 @@ const MyParts = () => {
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">My Products</h1>
               <span className="page-subtitle">Manage your products listings</span>
             </div>
@@ -139,17 +148,34 @@ const MyParts = () => {
             </div>
           </header>
 
-          <div className="panel glass" style={{ padding: 16, marginBottom: 12 }}>
-            <div className="inline-row" style={{ gridTemplateColumns: '1fr 220px' }}>
-              <input className="search" placeholder="Search my products…" value={q} onChange={(e) => { setPage(1); setQ(e.target.value) }} />
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="-createdAt">Newest</option>
-                <option value="createdAt">Oldest</option>
-                <option value="-price">Highest Price</option>
-                <option value="price">Lowest Price</option>
-                <option value="-quantity">Most Stock</option>
-                <option value="quantity">Least Stock</option>
-              </select>
+          <div className="panel glass dashboard-filters-panel" style={{ padding: 16, marginBottom: 12 }}>
+            <div className="dashboard-filters-bar">
+              <label className="sr-only" htmlFor="my-parts-search">Search my products</label>
+              <input
+                id="my-parts-search"
+                type="search"
+                className="dashboard-filters-input"
+                placeholder="Search my products…"
+                value={q}
+                onChange={(e) => { setPage(1); setQ(e.target.value) }}
+                autoComplete="off"
+              />
+              <div className="dashboard-filters-select-wrap">
+                <label className="sr-only" htmlFor="my-parts-sort">Sort by</label>
+                <select
+                  id="my-parts-sort"
+                  className="dashboard-filters-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="-createdAt">Newest</option>
+                  <option value="createdAt">Oldest</option>
+                  <option value="-price">Highest price</option>
+                  <option value="price">Lowest price</option>
+                  <option value="-quantity">Most stock</option>
+                  <option value="quantity">Least stock</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -202,7 +228,7 @@ const MyParts = () => {
                       }}>
                         <img 
                           src={(() => {
-                            const images = getPartImages(part);
+                            const images = getPartImageUrls(part);
                             return images.length > 0 ? toAbsUrl(images[0]) : '/assets/images/handpicked-img-1.webp';
                           })()} 
                           alt={part.name}
@@ -365,7 +391,7 @@ const MyParts = () => {
           )}
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   )
 }
 

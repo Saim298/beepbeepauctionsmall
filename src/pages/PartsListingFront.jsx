@@ -6,6 +6,7 @@ import FiltersSidebar from "../components/FiltersSidebar";
 import "../components/FiltersSidebar.css";
 import { HiHome, HiChevronRight } from "react-icons/hi";
 import { FiPackage } from "react-icons/fi";
+import { MobileBottomBarParts, MobileFilterSheet, MobileSearchSheet } from "../components/MobileBottomBar";
 
 const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
@@ -16,6 +17,8 @@ const PartsListingFront = () => {
   const [limit] = useState(12);
   const [total, setTotal] = useState(0);
   const [parts, setParts] = useState([]);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -70,16 +73,105 @@ const PartsListingFront = () => {
     return `${apiBase}${u}`;
   };
 
+  const clearAllFilters = () => {
+    setQ("");
+    setFilters({
+      brand: "",
+      category: "",
+      condition: "",
+      priceRange: "",
+      compatibility: "",
+    });
+  };
+
   return (
-    <div>
-      {/* Parts Navbar */}
-      <PartsNavbar
-        q={q}
-        setQ={setQ}
+    <div className="mobile-content-pad">
+      <div className="d-none d-lg-block">
+        <PartsNavbar q={q} setQ={setQ} />
+      </div>
+
+      <MobileBottomBarParts
+        activeFilterCount={activeFilterCount}
+        onFilterOpen={() => setMobileFilterOpen(true)}
+        onSearchOpen={() => setMobileSearchOpen(true)}
+      />
+
+      <MobileFilterSheet
+        open={mobileFilterOpen}
+        onClose={() => setMobileFilterOpen(false)}
+        title="Filter Products"
+        activeFilterCount={activeFilterCount}
+        onClearAll={clearAllFilters}
+      >
+        <div className="mb-3">
+          <label className="fw-bold mb-2 d-block">Search</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search parts, brands..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="fw-bold mb-2 d-block">Brand</label>
+          <select className="form-select" value={filters.brand} onChange={(e) => setFilters((p) => ({ ...p, brand: e.target.value }))}>
+            <option value="">All Brands</option>
+            {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="fw-bold mb-2 d-block">Category</label>
+          <select className="form-select" value={filters.category} onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value }))}>
+            <option value="">All Categories</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="fw-bold mb-2 d-block">Condition</label>
+          <select className="form-select" value={filters.condition} onChange={(e) => setFilters((p) => ({ ...p, condition: e.target.value }))}>
+            <option value="">All Conditions</option>
+            <option value="new">New</option>
+            <option value="used_excellent">Used - Excellent</option>
+            <option value="used_good">Used - Good</option>
+            <option value="used_fair">Used - Fair</option>
+            <option value="refurbished">Refurbished</option>
+            <option value="remanufactured">Remanufactured</option>
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="fw-bold mb-2 d-block">Price</label>
+          <select className="form-select" value={filters.priceRange} onChange={(e) => setFilters((p) => ({ ...p, priceRange: e.target.value }))}>
+            <option value="">All Prices</option>
+            <option value="0-100">$0 - $100</option>
+            <option value="100-300">$100 - $300</option>
+            <option value="300-1000">$300 - $1000</option>
+            <option value="1000-">$1000+</option>
+          </select>
+        </div>
+
+        <div className="mb-2">
+          <label className="fw-bold mb-2 d-block">Compatibility</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="e.g. BMW, Toyota..."
+            value={filters.compatibility}
+            onChange={(e) => setFilters((p) => ({ ...p, compatibility: e.target.value }))}
+          />
+        </div>
+      </MobileFilterSheet>
+
+      <MobileSearchSheet
+        open={mobileSearchOpen}
+        onClose={() => setMobileSearchOpen(false)}
+        value={q}
+        onChange={setQ}
       />
       
       {/* Breadcrumb Section */}
-      <section className="py-3 bg-light" style={{ marginTop: '80px' }}>
+      <section className="py-3 bg-light">
         <div className="container-fluid px-3 px-md-4 px-lg-6">
           <nav aria-label="breadcrumb">
             <ol className="breadcrumb mb-0 d-flex align-items-center">
@@ -122,7 +214,7 @@ const PartsListingFront = () => {
         <div className="container-fluid position-relative py-8 py-md-15">
           <div className="row gy-12 gy-xxl-0 px-3 px-md-4 px-lg-6">
             {/* Sidebar Column */}
-            <div className="col-md-4 col-lg-3">
+            <div className="col-md-4 col-lg-3 d-none d-lg-block">
               <div className="filters-sidebar-container">
                 <FiltersSidebar
                   q={q}

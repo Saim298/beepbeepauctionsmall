@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiRequest, saveAuthToken } from "../api/client";
 import logo from "../image/logo.png"
+import { MobileBottomBarAuth } from "../components/MobileBottomBar";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -15,6 +16,19 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    // Check if email looks disposable before submitting
+    const disposableEmailDomains = [
+      'guerrillamail.com', 'mailinator.com', '10minutemail.com', 'tempmail.org',
+      'temp-mail.org', 'yopmail.com', 'throwaway.email', 'maildrop.cc'
+    ];
+    
+    const emailDomain = email.toLowerCase().split('@')[1];
+    if (emailDomain && disposableEmailDomains.includes(emailDomain)) {
+      setError("Invalid email. Please use a permanent email address instead of a disposable one.");
+      return;
+    }
+    
     try {
       const data = await apiRequest("/api/auth/signup", {
         method: "POST",
@@ -23,12 +37,18 @@ const Signup = () => {
       saveAuthToken(data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      // Handle specific disposable email error from backend
+      if (err.message.includes('Disposable email') || err.message.includes('disposable')) {
+        setError("Invalid email. Please use a permanent email address instead of a disposable one.");
+      } else {
+        setError(err.message);
+      }
     }
   };
 
   return (
     <div>
+      <MobileBottomBarAuth page="signup" />
       {/* <!-- Authentication start--> */}
       <section class="authentication banner-section mx-2 mx-md-4 mx-xl-6 my-2 my-md-4 my-xl-6">
         <div class="container-fluid d-block d-lg-grid px-3 px-xl-0 position-relative">

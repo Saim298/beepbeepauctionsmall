@@ -21,8 +21,14 @@ document.addEventListener("DOMContentLoaded", function () {
         $(singleSelect[1]).addClass(selectType);
       });
 
-      /* Splitting init */
-      Splitting();
+      /* Splitting init (guard missing plugin deps) */
+      if (typeof Splitting === "function") {
+        try {
+          Splitting();
+        } catch (e) {
+          console.warn("Splitting init skipped:", e && e.message ? e.message : e);
+        }
+      }
 
       // editor init
       let existEditor = document.querySelector('#editor');

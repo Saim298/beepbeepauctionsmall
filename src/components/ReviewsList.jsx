@@ -4,6 +4,9 @@ import ReviewForm from './ReviewForm';
 import StarRating from './StarRating';
 import { FiStar, FiFilter  } from 'react-icons/fi';
 import { FaSortAlphaDown } from 'react-icons/fa';
+import { getAuthToken } from '../api/client.js';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
 
 const ReviewsList = ({ partId, partOwner, currentUser }) => {
   const [reviews, setReviews] = useState([]);
@@ -32,10 +35,11 @@ const ReviewsList = ({ partId, partOwner, currentUser }) => {
         ...(filters.rating && { rating: filters.rating })
       });
 
-      const response = await fetch(`/api/reviews/parts/${partId}?${queryParams}`);
-      const data = await response.json();
+      const response = await fetch(`${API_BASE}/api/reviews/parts/${partId}?${queryParams}`);
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await response.json() : null;
 
-      if (response.ok) {
+      if (response.ok && data) {
         setReviews(data.reviews);
         setStats(data.stats);
         setPagination(data.pagination);
@@ -55,15 +59,16 @@ const ReviewsList = ({ partId, partOwner, currentUser }) => {
     }
 
     try {
-      const response = await fetch(`/api/reviews/can-review/${partId}`, {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE}/api/reviews/can-review/${partId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
       });
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await response.json() : null;
       
-      const data = await response.json();
-      
-      if (response.ok) {
+      if (response.ok && data) {
         setCanReview(data.canReview);
         setHasReviewed(data.hasReviewed);
       }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Sidebar from '../../utils/Sidebar.jsx'
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
 import { FiCreditCard, FiPlus, FiCheck, FiTrash2, FiShield } from 'react-icons/fi'
 
@@ -159,8 +159,7 @@ const CardManagement = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
             <div style={{ textAlign: 'center' }}>
@@ -169,17 +168,17 @@ const CardManagement = () => {
             </div>
           </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     )
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">Payment Methods</h1>
               <span className="page-subtitle">Manage your cards for bidding</span>
             </div>
@@ -474,7 +473,7 @@ const CardManagement = () => {
           )}
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   )
 }
 

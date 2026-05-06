@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiRequest, saveAuthToken } from "../api/client";
 import logo from "../image/logo.png"
+import { MobileBottomBarAuth } from "../components/MobileBottomBar";
 
 const Signin = () => {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ const Signin = () => {
 
   return (
     <div>
+      <MobileBottomBarAuth page="signin" />
       {/* <!-- Authentication start--> */}
       <section class="authentication banner-section mx-2 mx-md-4 mx-xl-6 my-2 my-md-4 my-xl-6">
         <div class="container-fluid d-block d-lg-grid px-3 px-xl-0 position-relative">

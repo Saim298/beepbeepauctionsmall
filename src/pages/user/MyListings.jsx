@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Sidebar from '../../utils/Sidebar.jsx'
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
 
 const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
@@ -29,12 +29,12 @@ const MyListings = () => {
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">My Listings</h1>
               <span className="page-subtitle">Manage your cars</span>
             </div>
@@ -43,15 +43,32 @@ const MyListings = () => {
             </div>
           </header>
 
-          <div className="panel glass" style={{ padding: 16, marginBottom: 12 }}>
-            <div className="inline-row" style={{ gridTemplateColumns: '1fr 220px' }}>
-              <input className="search" placeholder="Search my cars…" value={q} onChange={(e) => { setPage(1); setQ(e.target.value) }} />
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="-createdAt">Newest</option>
-                <option value="createdAt">Oldest</option>
-                <option value="-price">Price high</option>
-                <option value="price">Price low</option>
-              </select>
+          <div className="panel glass dashboard-filters-panel" style={{ padding: 16, marginBottom: 12 }}>
+            <div className="dashboard-filters-bar">
+              <label className="sr-only" htmlFor="my-listings-search">Search my cars</label>
+              <input
+                id="my-listings-search"
+                type="search"
+                className="dashboard-filters-input"
+                placeholder="Search my cars…"
+                value={q}
+                onChange={(e) => { setPage(1); setQ(e.target.value) }}
+                autoComplete="off"
+              />
+              <div className="dashboard-filters-select-wrap">
+                <label className="sr-only" htmlFor="my-listings-sort">Sort by</label>
+                <select
+                  id="my-listings-sort"
+                  className="dashboard-filters-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="-createdAt">Newest</option>
+                  <option value="createdAt">Oldest</option>
+                  <option value="-price">Price high</option>
+                  <option value="price">Price low</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -89,7 +106,7 @@ const MyListings = () => {
           </div>
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   )
 }
 

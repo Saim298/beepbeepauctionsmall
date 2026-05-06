@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../api/client';
 import { FiPackage, FiTruck, FiCheck, FiEye, FiEdit3, FiClock } from 'react-icons/fi';
-import Sidebar from '../../utils/Sidebar.jsx';
+import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx';
 import '../dashboard.css';
 
 const SellerOrders = () => {
@@ -108,8 +108,7 @@ const SellerOrders = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
             <div style={{ textAlign: 'center' }}>
@@ -118,17 +117,17 @@ const SellerOrders = () => {
             </div>
           </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     );
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">My Orders (Seller)</h1>
               <span className="page-subtitle">Manage orders from buyers</span>
             </div>
@@ -506,7 +505,7 @@ const SellerOrders = () => {
           )}
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   );
 };
 

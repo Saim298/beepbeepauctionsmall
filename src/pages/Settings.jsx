@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import Sidebar from "../utils/Sidebar.jsx";
+import { DashboardAppChrome, DashboardMenuButton } from "../components/DashboardAppChrome.jsx";
 import { apiRequest, getAuthToken } from "../api/client";
 import "../pages/dashboard.css";
 
@@ -117,12 +117,12 @@ const Settings = () => {
   };
 
   return (
-    <div className="dashboard-root" data-theme={"dark"}>
-      <Sidebar />
+    <DashboardAppChrome theme="dark">
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">Settings</h1>
               <span className="page-subtitle">Manage your account profile</span>
             </div>
@@ -286,7 +286,7 @@ const Settings = () => {
           )}
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   );
 };
 

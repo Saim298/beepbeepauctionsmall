@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import Sidebar from '../utils/Sidebar.jsx'
+import { DashboardAppChrome, DashboardMenuButton } from '../components/DashboardAppChrome.jsx'
 import StatsCard from '../components/StatCard.jsx'
 import GoalRadial from '../components/GoalRadial.jsx'
 import TopAuctions from '../components/TopAuctions.jsx'
@@ -41,22 +41,48 @@ const toAbsUrl = (url) => {
   return `${import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'}${url}`;
 };
 
-// Custom TopParts component for dashboard
-const TopParts = ({ parts }) => {
-  console.log('TopParts received parts:', parts)
+const DEFAULT_STATS = {
+  totalParts: { value: '0', diff: '0%', trend: 'up' },
+  activeOrders: { value: '0', diff: '0%', trend: 'up' },
+  partsSold: { value: '0', diff: '0%', trend: 'up' },
+  revenue: { value: '$0', diff: '0%', trend: 'up' },
+};
+
+const DEFAULT_GOALS = {
+  orderFulfillment: { label: 'Order Fulfillment', value: 0, color: 'var(--primary-500)' },
+  customerRating: { label: 'Customer Rating', value: 0, color: 'var(--accent-500)' },
+  inventoryLevel: { label: 'Inventory Level', value: 0, color: '#22c55e' },
+};
+
+const mergeStats = (incoming = {}) => ({
+  totalParts: { ...DEFAULT_STATS.totalParts, ...(incoming.totalParts || {}) },
+  activeOrders: { ...DEFAULT_STATS.activeOrders, ...(incoming.activeOrders || {}) },
+  partsSold: { ...DEFAULT_STATS.partsSold, ...(incoming.partsSold || {}) },
+  revenue: { ...DEFAULT_STATS.revenue, ...(incoming.revenue || {}) },
+});
+
+const mergeGoals = (incoming = {}) => ({
+  orderFulfillment: { ...DEFAULT_GOALS.orderFulfillment, ...(incoming.orderFulfillment || {}) },
+  customerRating: { ...DEFAULT_GOALS.customerRating, ...(incoming.customerRating || {}) },
+  inventoryLevel: { ...DEFAULT_GOALS.inventoryLevel, ...(incoming.inventoryLevel || {}) },
+});
+
+// Custom Topproducts component for dashboard
+const Topproducts = ({ products }) => {
+  console.log('Topproducts received parts:', products)
   
-  if (!parts || parts.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--muted)' }}>
-        No parts sold yet. Start listing parts to see your top performers!
+        No products sold yet. Start listing products to see your top performers!
       </div>
     )
   }
 
   return (
     <div className="top-parts-list">
-      {parts.map((part, index) => (
-        <div key={part._id} className="part-item" style={{
+      {products.map((part, index) => (
+          <div key={products._id} className="part-item" style={{
           display: 'flex',
           alignItems: 'center',
           padding: '1rem',
@@ -78,10 +104,10 @@ const TopParts = ({ parts }) => {
             {index + 1}
           </div>
           <div className="part-image" style={{ width: '3rem', height: '3rem' }}>
-            {getPartImages(part).length > 0 ? (
+            {getPartImages(products).length > 0 ? (
               <img 
-                src={toAbsUrl(getPartImages(part)[0])} 
-                alt={part.name}
+                src={toAbsUrl(getPartImages(products)[0])} 
+                alt={products.name}
                 style={{ 
                   width: '100%', 
                   height: '100%', 
@@ -110,13 +136,13 @@ const TopParts = ({ parts }) => {
           </div>
           <div className="part-info" style={{ flex: 1 }}>
             <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>
-              {part.name}
+              {products.name}
             </h4>
             <p style={{ margin: '0.25rem 0', color: 'var(--muted)', fontSize: '0.9rem' }}>
-              {part.brand}
+              {products.brand}
             </p>
             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--muted)' }}>
-              <span>Sold: {part.totalSold}</span>
+              <span>Sold: {products.totalSold}</span>
               <span>Revenue: ${part.totalRevenue.toLocaleString()}</span>
             </div>
           </div>
@@ -125,7 +151,7 @@ const TopParts = ({ parts }) => {
             fontWeight: '600', 
             color: 'var(--primary-500)' 
           }}>
-            ${part.price.toLocaleString()}
+            ${products.price.toLocaleString()}
           </div>
         </div>
       ))}
@@ -137,18 +163,9 @@ const Dashboard = () => {
   const [theme, setTheme] = useState('dark')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({
-    totalParts: { value: '0', diff: '0%', trend: 'up' },
-    activeOrders: { value: '0', diff: '0%', trend: 'up' },
-    partsSold: { value: '0', diff: '0%', trend: 'up' },
-    revenue: { value: '$0', diff: '0%', trend: 'up' }
-  })
+  const [stats, setStats] = useState(DEFAULT_STATS)
   const [performanceData, setPerformanceData] = useState([])
-  const [goals, setGoals] = useState({
-    orderFulfillment: { label: 'Order Fulfillment', value: 0, color: 'var(--primary-500)' },
-    customerRating: { label: 'Customer Rating', value: 0, color: 'var(--accent-500)' },
-    inventoryLevel: { label: 'Inventory Level', value: 0, color: '#22c55e' }
-  })
+  const [goals, setGoals] = useState(DEFAULT_GOALS)
   const [topParts, setTopParts] = useState([])
 
   useEffect(() => {
@@ -183,40 +200,49 @@ const Dashboard = () => {
   }, [])
 
   const loadDashboardData = async (token) => {
-    try {
-      // Load stats
-      const statsResponse = await apiRequest('/api/dashboard/stats', { token })
-      if (statsResponse.success) {
-        setStats(statsResponse.stats)
-      }
+    const statsReq = apiRequest('/api/dashboard/stats', { token })
+      .then((res) => {
+        if (res?.success) setStats(mergeStats(res.stats))
+      })
+      .catch((error) => {
+        console.error('Dashboard stats endpoint failed:', error)
+      })
 
-      // Load performance data
-      const performanceResponse = await apiRequest('/api/dashboard/performance', { token })
-      if (performanceResponse.success) {
-        setPerformanceData(performanceResponse.performanceData)
-      }
+    const performanceReq = apiRequest('/api/dashboard/performance', { token })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.performanceData)) {
+          setPerformanceData(res.performanceData)
+        }
+      })
+      .catch((error) => {
+        console.error('Dashboard performance endpoint failed:', error)
+      })
 
-      // Load goals data
-      const goalsResponse = await apiRequest('/api/dashboard/goals', { token })
-      if (goalsResponse.success) {
-        setGoals(goalsResponse.goals)
-      }
+    const goalsReq = apiRequest('/api/dashboard/goals', { token })
+      .then((res) => {
+        if (res?.success) setGoals(mergeGoals(res.goals))
+      })
+      .catch((error) => {
+        console.error('Dashboard goals endpoint failed:', error)
+      })
 
-      // Load top parts
-      const topPartsResponse = await apiRequest('/api/dashboard/top-parts?limit=5', { token })
-      if (topPartsResponse.success) {
-        console.log('Top parts response:', topPartsResponse.topParts)
-        setTopParts(topPartsResponse.topParts)
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error)
-    }
+    const topPartsReq = apiRequest('/api/dashboard/top-parts?limit=5', { token })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.topParts)) {
+          setTopParts(res.topParts)
+        }
+      })
+      .catch((error) => {
+        // Not fatal: some backends may not expose top-parts yet.
+        console.warn('Dashboard top-parts endpoint unavailable:', error?.message || error)
+      })
+
+    await Promise.all([statsReq, performanceReq, goalsReq, topPartsReq])
   }
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container">
             <div style={{ 
@@ -231,19 +257,19 @@ const Dashboard = () => {
             </div>
           </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     )
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">Dashboard</h1>
-              <span className="page-subtitle">Welcome back, let's sell some parts today</span>
+              <span className="page-subtitle">Welcome back, let's sell some products today</span>
             </div>
             <div className="topbar-right">
               <div className="searchbox">
@@ -271,7 +297,7 @@ const Dashboard = () => {
 
           <section className="grid stats-grid">
             <StatsCard 
-              title="Total Parts Listed" 
+              title="Total products Listed" 
               value={stats.totalParts.value} 
               diff={stats.totalParts.diff} 
               trend={stats.totalParts.trend} 
@@ -285,7 +311,7 @@ const Dashboard = () => {
               data={[6,8,7,9,10,9,11,12,13,12]} 
             />
             <StatsCard 
-              title="Parts Sold" 
+              title="products Sold" 
               value={stats.partsSold.value} 
               diff={stats.partsSold.diff} 
               trend={stats.partsSold.trend} 
@@ -307,7 +333,7 @@ const Dashboard = () => {
                 <h3>Performance</h3>
                 <div className="legend">
                   <span className="dot primary"></span> Orders
-                  <span className="dot accent"></span> Parts Listed
+                  <span className="dot accent"></span> products Listed
                 </div>
               </div>
               <div className="panel-body">
@@ -365,12 +391,12 @@ const Dashboard = () => {
                 <h3>Top Selling Parts</h3>
                 <a className="link" href="/user/parts">View all</a>
               </div>
-              <TopParts parts={topParts} />
+              <Topproducts parts={topParts} />
             </div>
           </section>
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   )
 }
 

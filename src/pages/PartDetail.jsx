@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { FiArrowLeft, FiMessageSquare, FiShoppingCart, FiHeart, FiShare2, FiMapPin, FiClock, FiPackage, FiTool, FiShield, FiTruck } from 'react-icons/fi'
 import Sidebar from '../utils/Sidebar.jsx'
 import { getAuthToken } from '../api/client.js'
+import { useCart } from '../context/CartContext.jsx'
 import './dashboard.css'
 
 const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
@@ -17,6 +18,7 @@ const PartDetail = () => {
   const [buying, setBuying] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const { addToCart, clearCart } = useCart()
 
   useEffect(() => { localStorage.setItem('beep-theme', theme) }, [theme])
 
@@ -70,32 +72,14 @@ const PartDetail = () => {
     }
 
     setBuying(true)
-    
+
     try {
-      // For now, just console log the purchase details
-      console.log('🛒 Purchase initiated:', {
-        partId: part._id,
-        partName: part.name,
-        price: part.price,
-        sellerId: part.seller._id,
-        buyerId: currentUser.id,
-        quantity: 1
-      })
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      alert(`Purchase simulated! 🎉\n\nPart: ${part.name}\nPrice: $${part.price}\nSeller: ${part.seller.username}\n\nThis would integrate with your payment system.`)
-      
-      // In a real implementation, you would:
-      // 1. Create an order record
-      // 2. Process payment
-      // 3. Update inventory
-      // 4. Send notifications
-      
+      clearCart()
+      await addToCart(part, 1)
+      navigate('/checkout')
     } catch (error) {
       console.error('Purchase error:', error)
-      alert('Purchase failed. Please try again.')
+      alert(error.message || 'Unable to start checkout right now.')
     } finally {
       setBuying(false)
     }

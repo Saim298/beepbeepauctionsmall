@@ -43,7 +43,7 @@ const ListingsNavbar = ({
 
           {/* Account & Actions */}
           <div className="d-flex align-items-center gap-2">
-            <a href="/sell-car" className="box-style style-two rounded-pill p1-bg-color d-center py-3 py-md-4 px-3 px-md-4 px-xl-6 btn-sm d-none d-md-block">
+            <a href="/user/auctions/new" className="box-style style-two rounded-pill p1-bg-color d-center py-3 py-md-4 px-3 px-md-4 px-xl-6 btn-sm d-none d-md-block">
               <MdAdd className="me-1" size={16} />Sell Car
             </a>
             

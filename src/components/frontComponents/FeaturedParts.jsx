@@ -12,8 +12,10 @@ const FeaturedParts = () => {
 
   const toAbsUrl = (url) => {
     if (!url) return "/assets/images/handpicked-img-1.webp";
-    if (url.startsWith("http")) return url;
-    return `${apiBase}${url}`;
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    const base = (apiBase || "").replace(/\/$/, "");
+    const path = url.startsWith("/") ? url : `/${url}`;
+    return `${base}${path}`;
   };
 
   // Extract image URLs from descriptionHtml
@@ -28,14 +30,20 @@ const FeaturedParts = () => {
     return images;
   };
 
-  // Get images from media array or extract from descriptionHtml
+  const isImageMedia = (m) => {
+    if (!m?.url) return false
+    if (m.type === "image") return true
+    if (m.type === "video") return false
+    return /\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(m.url)
+  }
+
+  // Get images from media array or extract from descriptionHtml (skip video entries for <img>)
   const getPartImages = (part) => {
     if (!part) return [];
     
-    // First try to get images from media array
     if (part.media && part.media.length > 0) {
-      console.log("Using media array for part:", part.name, part.media);
-      return part.media.map(media => media.url);
+      const urls = part.media.filter(isImageMedia).map((m) => m.url).filter(Boolean);
+      if (urls.length) return urls;
     }
     
     // If no media, try to extract from descriptionHtml
@@ -82,7 +90,7 @@ const FeaturedParts = () => {
         <div className="container-fluid cus-padding">
           <div className="row gy-6 gy-md-0 mb-4 mb-md-6 justify-content-between align-items-end">
             <div className="col-md-8 col-lg-9 col-xl-7 col-xxl-5">
-              <div className="section-area d-grid gap-3 gap-md-4 reveal-single reveal-text text-one">
+              <div className="section-area d-grid gap-3 gap-md-4">
                 <div className="d-center justify-content-start gap-2">
                   <span className="p1-color fs-nine fw-semibold text-uppercase">
                     Premium Quality Products
@@ -123,7 +131,7 @@ const FeaturedParts = () => {
         <div className="container-fluid cus-padding">
           <div className="row gy-6 gy-md-0 mb-4 mb-md-6 justify-content-between align-items-end">
             <div className="col-md-8 col-lg-9 col-xl-7 col-xxl-5">
-              <div className="section-area d-grid gap-3 gap-md-4 reveal-single reveal-text text-one">
+              <div className="section-area d-grid gap-3 gap-md-4">
                 <div className="d-center justify-content-start gap-2">
                   <span className="p1-color fs-nine fw-semibold text-uppercase">
                     Premium Quality Products
@@ -138,7 +146,7 @@ const FeaturedParts = () => {
                 </div>
                 <h2 className="fs-two text-uppercase">
                   <span className="fw-bolder n4-color">Featured </span>
-                  <span className="fw-normal n4-color">Car Parts</span>
+                  <span className="fw-normal n4-color">Car Products</span>
                 </h2>
               </div>
             </div>
@@ -155,13 +163,13 @@ const FeaturedParts = () => {
     <section className="cars-rent position-relative px-0 px-md-10 pt-120 pb-120">
       <div className="abs-area position-absolute top-0 end-0 pe-none mt-20">
         <span className="text-uppercase text-gradient display-two p1-color mb-n20 me-20">
-          PARTS
+          PRODUCTS
         </span>
       </div>
       <div className="container-fluid cus-padding">
         <div className="row gy-6 gy-md-0 mb-4 mb-md-6 justify-content-between align-items-end">
           <div className="col-md-8 col-lg-9 col-xl-7 col-xxl-5">
-            <div className="section-area d-grid gap-3 gap-md-4 reveal-single reveal-text text-one">
+            <div className="section-area d-grid gap-3 gap-md-4">
               <div className="d-center justify-content-start gap-2">
                 <span className="p1-color fs-nine fw-semibold text-uppercase">
                   Premium Quality Products
@@ -176,7 +184,7 @@ const FeaturedParts = () => {
               </div>
               <h2 className="fs-two text-uppercase">
                 <span className="fw-bolder n4-color">Featured </span>
-                <span className="fw-normal n4-color">Car Parts</span>
+                <span className="fw-normal n4-color">Car Products</span>
               </h2>
             </div>
           </div>
@@ -254,13 +262,13 @@ const FeaturedParts = () => {
                             </span>
                             <span className="fs-nine n4-color">
                               {part.views || 0} views
-                            </span>
+                            </span> 
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Part Details */}
+                    {/* Product Details */}
                     <div className="row g-0 h-100">
                       <div className="col-lg-8">
                         <div className="row g-0">

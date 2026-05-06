@@ -42,7 +42,9 @@ export function bootstrapAuthTokenFromUrl() {
   try {
     const url = new URL(window.location.href);
     const t = url.searchParams.get('token');
-    if (t) {
+    // Only bootstrap token if we're NOT on the OAuth success page
+    // The OAuth success page needs to handle the token itself
+    if (t && !window.location.pathname.includes('/oauth-success')) {
       saveAuthToken(t);
       url.searchParams.delete('token');
       window.history.replaceState({}, '', url.toString());

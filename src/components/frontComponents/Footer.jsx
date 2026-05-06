@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <div>
       {/* <!-- Footer Area Start --> */}
-      <footer className="footer-section n4-bg-color position-relative">
+      <footer className="footer-section app-site-footer n4-bg-color position-relative">
         <div className="container-fluid footer-inner position-relative pt-120 rounded-5 rounded-top-0">
           <div className="cus-padding position-relative">
             <div className="row gy-5 gy-md-0 align-items-center justify-content-between">

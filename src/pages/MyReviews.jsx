@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiStar, FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
 import StarRating from '../components/StarRating';
-import Sidebar from '../utils/Sidebar.jsx';
+import { DashboardAppChrome, DashboardMenuButton } from '../components/DashboardAppChrome.jsx';
 import '../pages/dashboard.css';
 
 const MyReviews = () => {
@@ -91,8 +91,7 @@ const MyReviews = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-root" data-theme={theme}>
-        <Sidebar />
+      <DashboardAppChrome theme={theme}>
         <main className="dashboard-main">
           <div className="dashboard-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
             <div style={{ textAlign: 'center' }}>
@@ -101,17 +100,17 @@ const MyReviews = () => {
             </div>
           </div>
         </main>
-      </div>
+      </DashboardAppChrome>
     );
   }
 
   return (
-    <div className="dashboard-root" data-theme={theme}>
-      <Sidebar />
+    <DashboardAppChrome theme={theme}>
       <main className="dashboard-main">
         <div className="dashboard-container">
           <header className="dashboard-topbar">
             <div className="topbar-left">
+              <DashboardMenuButton />
               <h1 className="page-title">My Reviews</h1>
               <span className="page-subtitle">Manage your product reviews and ratings</span>
             </div>
@@ -327,7 +326,7 @@ const MyReviews = () => {
           )}
         </div>
       </main>
-    </div>
+    </DashboardAppChrome>
   );
 };
 
