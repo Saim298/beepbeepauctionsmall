@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { getAuthToken, apiRequest } from '../api/client.js';
 import PartsNavbar from '../components/PartsNavbar';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
 
 const CheckoutFront = () => {
   const navigate = useNavigate();
@@ -131,6 +131,7 @@ const CheckoutFront = () => {
           })),
           shippingAddress: {
             fullName: shippingInfo.fullName,
+            email: shippingInfo.email,
             address: shippingInfo.address,
             city: shippingInfo.city,
             state: shippingInfo.state,
