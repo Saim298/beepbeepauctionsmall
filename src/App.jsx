@@ -31,6 +31,8 @@ import BuyerOrders from "./pages/user/BuyerOrders.jsx";
 import SellerOrders from "./pages/user/SellerOrders.jsx";
 import CartFront from "./pages/CartFront.jsx";
 import CheckoutFront from "./pages/CheckoutFront.jsx";
+import CloverCheckoutSuccess from "./pages/CloverCheckoutSuccess.jsx";
+import CloverCheckoutFailure from "./pages/CloverCheckoutFailure.jsx";
 
 function App() {
   return (
@@ -50,6 +52,8 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/cart" element={<CartFront />} />
             <Route path="/checkout" element={<CheckoutFront />} />
+            <Route path="/checkout/clover-success" element={<CloverCheckoutSuccess />} />
+            <Route path="/checkout/clover-failure" element={<CloverCheckoutFailure />} />
 
             {/* Parts Marketplace Routes */}
             <Route path="/user/parts" element={<MyParts />} />
@@ -60,6 +64,7 @@ function App() {
             <Route path="/user/seller-orders" element={<SellerOrders />} />
             <Route path="/parts" element={<PartsListingFront />} />
             <Route path="/parts/:id" element={<PartDetailFront />} />
+            <Route path="/part/:id" element={<PartDetailFront />} />
             <Route
               path="/dashboard/part-details/:id"
               element={<AuctionDetailFront />}

@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { getAuthToken, apiRequest } from '../api/client.js';
 import PartsNavbar from '../components/PartsNavbar';
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const CheckoutFront = () => {
   const navigate = useNavigate();
@@ -23,15 +23,12 @@ const CheckoutFront = () => {
     city: '',
     state: '',
     zipCode: '',
-    country: 'United States'
+    country: 'United States',
+    notes: ''
   });
 
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'card', // Default payment method
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardholderName: '',
+    method: 'card',
     billingAddress: {
       sameAsShipping: true,
       address: '',
@@ -40,6 +37,11 @@ const CheckoutFront = () => {
       zipCode: ''
     }
   });
+
+  /** Clover iframe + charge flow */
+  const [cloverConfig, setCloverConfig] = useState(null);
+  const [cloverConfigError, setCloverConfigError] = useState('');
+  const [paymentSubmitLoading, setPaymentSubmitLoading] = useState(false);
 
   useEffect(() => {
     const token = getAuthToken();
@@ -73,14 +75,84 @@ const CheckoutFront = () => {
       .catch(() => navigate('/signin'));
   }, [navigate, items.length]);
 
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token || items.length === 0) return;
+
+    let cancelled = false;
+    apiRequest('/api/payments/clover/config')
+      .then((cfg) => {
+        if (!cancelled) setCloverConfig(cfg);
+      })
+      .catch((err) => {
+        if (!cancelled) setCloverConfigError(err.message || 'Checkout cannot load Clover settings.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items.length]);
+
+  const skipClientPayment = Boolean(cloverConfig?.skipClientPayment);
+  const totalSteps = skipClientPayment ? 3 : 2;
+
+  useEffect(() => {
+    if (cloverConfig && !skipClientPayment && step > 2) {
+      setStep(2);
+    }
+  }, [cloverConfig, skipClientPayment, step]);
+
   const handleShippingSubmit = (e) => {
     e.preventDefault();
     setStep(2);
   };
 
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    setStep(3);
+
+    if (!cloverConfig?.ready) {
+      alert(cloverConfigError || 'Payment is unavailable. Please try again later.');
+      return;
+    }
+
+    if (cloverConfig.skipClientPayment) {
+      setStep(3);
+      return;
+    }
+
+    setPaymentSubmitLoading(true);
+    try {
+      const session = await apiRequest('/api/payments/clover/hosted-checkout', {
+        method: 'POST',
+        body: {
+          items: items.map((item) => ({
+            partId: item.partId,
+            quantity: item.quantity
+          })),
+          shippingAddress: {
+            fullName: shippingInfo.fullName,
+            address: shippingInfo.address,
+            city: shippingInfo.city,
+            state: shippingInfo.state,
+            zipCode: shippingInfo.zipCode,
+            country: shippingInfo.country,
+            phone: shippingInfo.phone
+          },
+          billingAddress: paymentInfo.billingAddress,
+          buyerNotes: shippingInfo.notes || '',
+          paymentMethod: paymentInfo.method,
+          tipsEnabled: false
+        }
+      });
+
+      if (!session?.href) throw new Error('Failed to create Clover Hosted Checkout session.');
+      window.location.href = session.href;
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Unable to open Clover Hosted Checkout.');
+    } finally {
+      setPaymentSubmitLoading(false);
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -253,95 +325,82 @@ const CheckoutFront = () => {
     </div>
   );
 
-  const renderPaymentForm = () => (
+  const renderPaymentForm = () => {
+    const showDevSkip = Boolean(cloverConfig?.skipClientPayment);
+    const showLoadingConfig = !cloverConfig && !cloverConfigError;
+    const showError = !!cloverConfigError && step === 2;
+    const canPay = cloverConfig?.ready && !cloverConfigError;
+
+    return (
     <div className="bg-white rounded-4 shadow-sm p-4">
       <h4 className="n4-color mb-4 d-flex align-items-center">
         <FiCreditCard className="me-2" />
         Payment Information
       </h4>
-      
+
+      {showLoadingConfig && (
+        <p className="text-muted small">Loading secure checkout…</p>
+      )}
+      {showError && (
+        <div className="alert alert-danger" role="alert">
+          {cloverConfigError}
+        </div>
+      )}
+      {showDevSkip && (
+        <div className="alert alert-secondary small mb-4">
+          Development mode: <code>CLOVER_SKIP_PAYMENT</code> is on — orders complete without charging a card.
+        </div>
+      )}
+
       <form onSubmit={handlePaymentSubmit}>
-        <div className="row g-3">
-          <div className="col-12">
-            <label className="form-label n4-color fw-semibold">Card Number *</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="1234 5678 9012 3456"
-              value={paymentInfo.cardNumber}
-              onChange={(e) => setPaymentInfo(prev => ({...prev, cardNumber: e.target.value}))}
-              maxLength="19"
-              required
-            />
+        {!showDevSkip && cloverConfig?.ready && (
+          <div className="alert alert-info mb-3" role="alert">
+            You will be redirected to Clover Hosted Checkout to complete payment securely.
           </div>
-          
-          <div className="col-md-6">
-            <label className="form-label n4-color fw-semibold">Expiry Date *</label>
+        )}
+
+        <div className="col-12 mt-3">
+          <div className="form-check">
             <input
-              type="text"
-              className="form-control"
-              placeholder="MM/YY"
-              value={paymentInfo.expiryDate}
-              onChange={(e) => setPaymentInfo(prev => ({...prev, expiryDate: e.target.value}))}
-              maxLength="5"
-              required
+              type="checkbox"
+              className="form-check-input"
+              id="sameAsShipping"
+              checked={paymentInfo.billingAddress.sameAsShipping}
+              onChange={(e) => setPaymentInfo(prev => ({
+                ...prev,
+                billingAddress: { ...prev.billingAddress, sameAsShipping: e.target.checked }
+              }))}
             />
-          </div>
-          
-          <div className="col-md-6">
-            <label className="form-label n4-color fw-semibold">CVV *</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="123"
-              value={paymentInfo.cvv}
-              onChange={(e) => setPaymentInfo(prev => ({...prev, cvv: e.target.value}))}
-              maxLength="4"
-              required
-            />
-          </div>
-          
-          <div className="col-12">
-            <label className="form-label n4-color fw-semibold">Cardholder Name *</label>
-            <input
-              type="text"
-              className="form-control"
-              value={paymentInfo.cardholderName}
-              onChange={(e) => setPaymentInfo(prev => ({...prev, cardholderName: e.target.value}))}
-              required
-            />
-          </div>
-          
-          <div className="col-12">
-            <div className="form-check">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="sameAsShipping"
-                checked={paymentInfo.billingAddress.sameAsShipping}
-                onChange={(e) => setPaymentInfo(prev => ({
-                  ...prev,
-                  billingAddress: { ...prev.billingAddress, sameAsShipping: e.target.checked }
-                }))}
-              />
-              <label className="form-check-label n4-color" htmlFor="sameAsShipping">
-                Billing address same as shipping address
-              </label>
-            </div>
+            <label className="form-check-label n4-color" htmlFor="sameAsShipping">
+              Billing address same as shipping address
+            </label>
           </div>
         </div>
-        
+
+        <p className="text-muted small mt-3 mb-0">
+          Payments are handled on Clover-hosted pages. No card data is entered or stored in this app.
+        </p>
+
         <div className="d-flex justify-content-between mt-4">
-          <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setStep(1)}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary rounded-pill px-4"
+            onClick={() => { setStep(1); }}
+          >
             Back to Shipping
           </button>
-          <button type="submit" className="box-style style-two rounded-pill p1-bg-color d-center py-3 py-md-4 px-3 px-md-4 px-xl-6 rounded-pill mb-3 px-4 py-2">
-            Review Order
+          <button
+            type="submit"
+            className="box-style style-two rounded-pill p1-bg-color d-center py-3 py-md-4 px-3 px-md-4 px-xl-6 rounded-pill mb-3 px-4 py-2"
+            disabled={!canPay || paymentSubmitLoading}
+          >
+            {paymentSubmitLoading ? 'Opening Clover Checkout…' : (showDevSkip ? 'Review Order' : 'Proceed to Clover Checkout')}
           </button>
         </div>
       </form>
     </div>
-  );
+    );
+  };
 
   const renderOrderReview = () => (
     <div className="bg-white rounded-4 shadow-sm p-4">
@@ -388,13 +447,16 @@ const CheckoutFront = () => {
       <div className="mb-4">
         <h5 className="n4-color mb-3">Payment Method</h5>
         <div className="border rounded-3 p-3 n5-color" style={{ fontSize: '14px' }}>
-          <div>Credit Card ending in {paymentInfo.cardNumber.slice(-4)}</div>
-          <div>{paymentInfo.cardholderName}</div>
+          <div>{cloverConfig?.skipClientPayment ? 'Card (skipped in dev)' : 'Clover Hosted Checkout redirect'}</div>
         </div>
       </div>
       
       <div className="d-flex justify-content-between mt-4">
-        <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setStep(2)}>
+        <button
+          type="button"
+          className="btn btn-outline-secondary rounded-pill px-4"
+          onClick={() => { setStep(2); }}
+        >
           Back to Payment
         </button>
         <button 
@@ -466,7 +528,14 @@ const CheckoutFront = () => {
                       Secure Checkout
                     </h5>
                     <p className="fs-nine n4-color">
-                      Step {step} of 3 - {step === 1 ? 'Shipping' : step === 2 ? 'Payment' : 'Review'}
+                      Step {step} of {totalSteps} -{' '}
+                      {step === 1
+                        ? 'Shipping'
+                        : step === 2
+                          ? skipClientPayment
+                            ? 'Payment'
+                            : 'Secure payment'
+                          : 'Review'}
                     </p>
                   </div>
                 </div>
@@ -487,7 +556,12 @@ const CheckoutFront = () => {
               {/* Progress Steps */}
               <div className="bg-white rounded-4 shadow-sm p-3 mb-4">
                 <div className="d-flex align-items-center justify-content-between">
-                  {[1, 2, 3].map((stepNum) => (
+                  {Array.from({ length: totalSteps }, (_, i) => i + 1).map((stepNum) => {
+                    const labels =
+                      totalSteps === 3
+                        ? { 1: 'Shipping', 2: 'Payment', 3: 'Review' }
+                        : { 1: 'Shipping', 2: 'Pay with Clover' };
+                    return (
                     <div key={stepNum} className="d-flex align-items-center" style={{ 
                       color: step >= stepNum ? '#0d6efd' : '#6c757d',
                       fontWeight: step === stepNum ? '600' : 'normal'
@@ -508,9 +582,9 @@ const CheckoutFront = () => {
                         {step > stepNum ? '✓' : stepNum}
                       </div>
                       <span>
-                        {stepNum === 1 ? 'Shipping' : stepNum === 2 ? 'Payment' : 'Review'}
+                        {labels[stepNum]}
                       </span>
-                      {stepNum < 3 && (
+                      {stepNum < totalSteps && (
                         <div style={{
                           width: '60px',
                           height: '2px',
@@ -519,7 +593,8 @@ const CheckoutFront = () => {
                         }} />
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -528,7 +603,7 @@ const CheckoutFront = () => {
                 <div className="col-lg-8">
                   {step === 1 && renderShippingForm()}
                   {step === 2 && renderPaymentForm()}
-                  {step === 3 && renderOrderReview()}
+                  {step === 3 && skipClientPayment && renderOrderReview()}
                 </div>
 
                 {/* Order Summary */}
