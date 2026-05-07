@@ -8,9 +8,25 @@ import PartsNavbar from '../components/PartsNavbar';
 const POLL_MS = 1500;
 const MAX_POLLS = 40;
 
+function resolveSessionId(searchParams) {
+  const raw =
+    searchParams.get('session_id') ||
+    searchParams.get('checkout_session_id') ||
+    searchParams.get('checkoutSessionId') ||
+    searchParams.get('id') ||
+    '';
+  const v = String(raw).trim();
+  if (!v) return '';
+  const upper = v.toUpperCase();
+  if (upper.includes('CHECKOUT_SESSION_ID') || upper === '{CHECKOUT_SESSION_ID}') {
+    return '';
+  }
+  return v;
+}
+
 const CloverCheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session_id');
+  const sessionId = resolveSessionId(searchParams);
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [message, setMessage] = useState('Confirming your payment…');
@@ -20,7 +36,9 @@ const CloverCheckoutSuccess = () => {
   useEffect(() => {
     if (!sessionId) {
       setFailed(true);
-      setMessage('Missing checkout session. Return to your cart and try again.');
+      setMessage(
+        'Missing or invalid checkout session in the URL (Clover did not replace {CHECKOUT_SESSION_ID}, or use session_id / checkout_session_id). Set success URL in Clover or env to use placeholders. Return to cart and complete checkout again.'
+      );
       return undefined;
     }
 
