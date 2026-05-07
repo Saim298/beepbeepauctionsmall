@@ -33,6 +33,8 @@ import CartFront from "./pages/CartFront.jsx";
 import CheckoutFront from "./pages/CheckoutFront.jsx";
 import CloverCheckoutSuccess from "./pages/CloverCheckoutSuccess.jsx";
 import CloverCheckoutFailure from "./pages/CloverCheckoutFailure.jsx";
+import CloverOAuthStart from "./pages/CloverOAuthStart.jsx";
+import CloverOAuthCallback from "./pages/CloverOAuthCallback.jsx";
 
 function App() {
   return (
@@ -44,6 +46,8 @@ function App() {
             <Route path="/signin" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/oauth-success" element={<OAuthSuccess />} />
+            <Route path="/oauth-start" element={<CloverOAuthStart />} />
+            <Route path="/oauth-clover-callback" element={<CloverOAuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/user/listings/new" element={<UserAddCar />} />
             <Route path="/user/listings" element={<MyListings />} />
@@ -77,7 +81,6 @@ function App() {
               path="/auction-details/:id"
               element={<AuctionDetailFront />}
             />
-            <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/select-role" element={<RoleSelect />} />
             <Route path="/dashboard/settings" element={<Settings />} />
             <Route path="/contact" element={<Contact />} />
