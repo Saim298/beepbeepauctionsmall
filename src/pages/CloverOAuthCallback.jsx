@@ -3,19 +3,26 @@ import { useSearchParams } from 'react-router-dom';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+function parseHashParams() {
+  const raw = window.location.hash || '';
+  const fragment = raw.startsWith('#') ? raw.slice(1) : raw;
+  return new URLSearchParams(fragment);
+}
+
 /**
- * Clover redirects here with ?code=...&merchant_id=... after authorization.
- * We exchange the code on your backend for access_token (requires APP_ID + APP_SECRET on server).
+ * Clover returns either:
+ * - Authorization code: ?code=... (exchange on backend)
+ * - Implicit / Token (Testing): #access_token=...&refresh_token=... (fragment only; not sent to server)
  */
 const CloverOAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [refreshToken, setRefreshToken] = useState('');
+  const [merchantId, setMerchantId] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const code = searchParams.get('code');
     const err = searchParams.get('error');
     const desc = searchParams.get('error_description');
 
@@ -25,8 +32,32 @@ const CloverOAuthCallback = () => {
       return;
     }
 
+    const mid = searchParams.get('merchant_id') || '';
+    setMerchantId(mid);
+
+    const hashParams = parseHashParams();
+    const tokenFromHash = (hashParams.get('access_token') || '').trim();
+    const refreshFromHash = (hashParams.get('refresh_token') || '').trim();
+
+    if (tokenFromHash) {
+      setAccessToken(tokenFromHash);
+      setRefreshToken(refreshFromHash);
+      setLoading(false);
+      try {
+        const url = new URL(window.location.href);
+        url.hash = '';
+        window.history.replaceState({}, '', url.toString());
+      } catch (_) {
+        // ignore
+      }
+      return;
+    }
+
+    const code = searchParams.get('code');
     if (!code) {
-      setError('No authorization code in URL. Did Clover redirect here after you approved access?');
+      setError(
+        'No authorization code in the URL query and no access_token in the URL hash. If you use Clover "Token (Testing Only)", approve again and ensure you land on this page with #access_token= in the address bar.'
+      );
       setLoading(false);
       return;
     }
@@ -88,14 +119,18 @@ const CloverOAuthCallback = () => {
   return (
     <div className="container py-5">
       <h4 className="mb-3">Clover merchant token</h4>
+      {merchantId ? (
+        <p className="text-muted small">
+          merchant_id from redirect: <code>{merchantId}</code>
+        </p>
+      ) : null}
       <p className="text-muted">
-        Set this in Render (or your backend env) as <code>CLOVER_HOSTED_CHECKOUT_BEARER</code>. Treat it
-        like a password; it expires — use <code>refresh_token</code> with Clover{' '}
-        <code>/oauth/v2/refresh</code> for long-running servers.
+        Set this in Render as <code>CLOVER_HOSTED_CHECKOUT_BEARER</code> using the{' '}
+        <strong>access_token</strong> below. Rotate it if you shared this URL; hash tokens are sensitive.
       </p>
 
       <div className="mb-3">
-        <label className="form-label fw-bold">access_token (use for Hosted Checkout API)</label>
+        <label className="form-label fw-bold">access_token (Hosted Checkout API)</label>
         <textarea className="form-control font-monospace small" rows={4} readOnly value={accessToken} />
         <button type="button" className="btn btn-primary mt-2" onClick={() => copy(accessToken)}>
           Copy access_token
@@ -104,7 +139,7 @@ const CloverOAuthCallback = () => {
 
       {refreshToken ? (
         <div className="mb-3">
-          <label className="form-label fw-bold">refresh_token (store securely; not in frontend in production)</label>
+          <label className="form-label fw-bold">refresh_token (store securely)</label>
           <textarea className="form-control font-monospace small" rows={3} readOnly value={refreshToken} />
           <button type="button" className="btn btn-outline-secondary mt-2" onClick={() => copy(refreshToken)}>
             Copy refresh_token
@@ -113,8 +148,7 @@ const CloverOAuthCallback = () => {
       ) : null}
 
       <p className="small text-muted">
-        After saving on Render, redeploy the service and retry checkout. Remove this page from bookmarks in
-        production if you prefer not to expose token UI.
+        After saving on Render, redeploy the API and retry checkout.
       </p>
     </div>
   );
