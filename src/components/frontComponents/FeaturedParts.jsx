@@ -8,7 +8,7 @@ const FeaturedParts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const toAbsUrl = (url) => {
     if (!url) return "/assets/images/handpicked-img-1.webp";
@@ -67,7 +67,10 @@ const FeaturedParts = () => {
         console.log("Featured parts response:", response);
         console.log("Featured parts count:", response.parts?.length || 0);
         console.log("Featured parts data:", response.parts);
-        setFeaturedParts(response.parts || []);
+        const visible = (response.parts || []).filter(
+          (part) => part?.status === "active" && Number(part?.quantity || 0) > 0
+        );
+        setFeaturedParts(visible);
       } catch (err) {
         console.error("Error fetching featured parts:", err);
         setError(err.message);

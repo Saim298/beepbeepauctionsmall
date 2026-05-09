@@ -6,7 +6,7 @@ import { FiStar, FiFilter  } from 'react-icons/fi';
 import { FaSortAlphaDown } from 'react-icons/fa';
 import { getAuthToken } from '../api/client.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const ReviewsList = ({ partId, partOwner, currentUser }) => {
   const [reviews, setReviews] = useState([]);

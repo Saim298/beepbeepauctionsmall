@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const MyListings = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')
@@ -89,7 +89,7 @@ const MyListings = () => {
             <div className="auctions-grid">
               {cars.map((c) => (
                 <a key={c._id} className="auction-card panel glass" href={`/cars/${c._id}`}>
-                  <div className="thumb-xl"><img src={`https://beep-auctions-backend.onrender.com${c.media?.[0]?.url}` || '/assets/images/handpicked-img-1.webp'} alt={c.name} /></div>
+                  <div className="thumb-xl"><img src={`http://localhost:5000${c.media?.[0]?.url}` || '/assets/images/handpicked-img-1.webp'} alt={c.name} /></div>
                   <div className="card-body">
                     <div className="title-row"><h4>{c.name}</h4><span className="year">{c.year}</span></div>
                     <div className="metrics"><div className="metric"><span className="muted">Price</span><strong>${c.price?.toLocaleString()}</strong></div><div className="metric"><span className="muted">Make</span><strong>{c.make?.name}</strong></div><div className="metric"><span className="muted">Model</span><strong>{c.model?.name}</strong></div></div>

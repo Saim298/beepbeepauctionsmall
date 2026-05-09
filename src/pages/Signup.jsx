@@ -11,7 +11,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("individual");
   const [error, setError] = useState("");
-  const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

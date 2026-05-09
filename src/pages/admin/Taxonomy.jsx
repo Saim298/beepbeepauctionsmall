@@ -3,7 +3,7 @@ import AdminSidebar from './Sidebar.jsx'
 import { getAuthToken } from '../../api/client'
 import '../../pages/dashboard.css'
 
-const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const Taxonomy = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')

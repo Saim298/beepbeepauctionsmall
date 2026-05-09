@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fi';
 import { MdGavel } from 'react-icons/md';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 const Auctions = () => {
   const [auctions, setAuctions] = useState([]);

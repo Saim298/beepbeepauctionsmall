@@ -1,20 +1,37 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  
+
   // Use provided token or get from localStorage
   const authToken = token || getAuthToken();
-  if (authToken) {
+  const hasAuthToken = Boolean(authToken);
+  if (hasAuthToken) {
     headers.Authorization = `Bearer ${authToken}`;
   }
-  
-  const res = await fetch(`${API_BASE}${path}`, {
+
+  let res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
     credentials: 'include',
     body: body ? JSON.stringify(body) : undefined
   });
+
+  // If a stale bearer token causes 401, retry once with cookie-only auth.
+  if (res.status === 401 && hasAuthToken) {
+    const retryHeaders = { 'Content-Type': 'application/json' };
+    res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers: retryHeaders,
+      credentials: 'include',
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.ok && !token) {
+      // Local token is stale; clear it so future requests use valid auth.
+      clearAuthToken();
+    }
+  }
+
   const contentType = res.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');
   const data = isJson ? await res.json() : await res.text();
@@ -26,7 +43,10 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
 }
 
 export function saveAuthToken(token) {
-  if (token) localStorage.setItem('auth_token', token);
+  if (token) {
+    localStorage.setItem('auth_token', token);
+    window.dispatchEvent(new Event('auth-token-changed'));
+  }
 }
 
 export function getAuthToken() {
@@ -35,6 +55,7 @@ export function getAuthToken() {
 
 export function clearAuthToken() {
   localStorage.removeItem('auth_token');
+  window.dispatchEvent(new Event('auth-token-changed'));
 }
 
 // Try to sync token from URL on app boot (OAuth flows)

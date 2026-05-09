@@ -12,7 +12,7 @@ import {
   FiSettings
 } from 'react-icons/fi';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 const SellerDashboard = () => {
   const [auctions, setAuctions] = useState([]);

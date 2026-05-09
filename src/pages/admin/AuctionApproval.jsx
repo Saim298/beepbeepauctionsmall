@@ -4,7 +4,7 @@ import '../../pages/dashboard.css'
 import { FiCheck, FiX, FiEye, FiClock, FiUser, FiDollarSign, FiCalendar } from 'react-icons/fi'
 import { MdGavel } from 'react-icons/md'
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const AuctionApproval = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')

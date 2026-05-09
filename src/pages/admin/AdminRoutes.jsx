@@ -12,7 +12,7 @@ import { getAuthToken } from '../../api/client'
 const AdminGuard = ({ children }) => {
   const navigate = useNavigate()
   const [state, setState] = useState({ loading: true, exists: false, token: null })
-  const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   useEffect(() => {
     const check = async () => {

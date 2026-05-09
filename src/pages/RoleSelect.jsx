@@ -12,7 +12,7 @@ const RoleSelect = () => {
   const [selected, setSelected] = useState('dealer')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   const submit = async (e) => {
     e.preventDefault()

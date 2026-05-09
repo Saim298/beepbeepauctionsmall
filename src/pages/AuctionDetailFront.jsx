@@ -18,7 +18,7 @@ import { HiHome, HiChevronRight } from "react-icons/hi";
 import io from "socket.io-client";
 import { MobileBottomBarDetail } from "../components/MobileBottomBar";
 
-const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Add CSS animations
 const styles = `

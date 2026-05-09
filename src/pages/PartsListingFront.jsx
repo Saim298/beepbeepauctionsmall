@@ -8,7 +8,7 @@ import { HiHome, HiChevronRight } from "react-icons/hi";
 import { FiPackage } from "react-icons/fi";
 import { MobileBottomBarParts, MobileFilterSheet, MobileSearchSheet } from "../components/MobileBottomBar";
 
-const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const PartsListingFront = () => {
   const [q, setQ] = useState("");
@@ -59,8 +59,11 @@ const PartsListingFront = () => {
     fetch(`${apiBase}/api/parts?${params.toString()}`, { signal: controller.signal })
       .then(r => r.json())
       .then(({ parts: partsData, pagination }) => { 
-        setParts(partsData || []); 
-        setTotal(pagination?.totalParts || 0); 
+        const visibleParts = (partsData || []).filter(
+          (part) => part?.status === "active" && Number(part?.quantity || 0) > 0
+        );
+        setParts(visibleParts); 
+        setTotal(pagination?.totalParts || visibleParts.length); 
       })
       .catch(() => {});
     return () => controller.abort();

@@ -4,7 +4,7 @@ import { DashboardAppChrome, DashboardMenuButton } from '../../components/Dashbo
 import { getAuthToken } from '../../api/client.js'
 import '../dashboard.css'
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const MyParts = () => {
   const navigate = useNavigate()

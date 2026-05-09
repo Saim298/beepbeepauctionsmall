@@ -52,7 +52,7 @@ const Sidebar = ({ mobileOpen = false, onCloseMobile = () => {} }) => {
         if (user) {
           setUserRole(user.role || '')
           if (user.avatarFile || user.avatarUrl) {
-            const base = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+            const base = import.meta.env.VITE_API_URL || 'http://localhost:5000'
             const src = user.avatarFile ? `${base}${user.avatarFile}` : user.avatarUrl
             setAvatarUrl(src)
           }

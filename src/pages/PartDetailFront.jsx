@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FiAward,
@@ -29,7 +29,7 @@ import { useCart } from "../context/CartContext.jsx";
 import ReviewsList from "../components/ReviewsList.jsx";
 import { MobileBottomBarPartDetail } from "../components/MobileBottomBar";
 
-const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const CONDITION_MAP = {
   new: { cls: "pdf-badge-red", label: "New", icon: <FiAward size={13} /> },
@@ -173,6 +173,7 @@ const PartDetailFront = () => {
   const [similarParts, setSimilarParts] = useState([]);
   const [sellerProducts, setSellerProducts] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [qty, setQty] = useState(1);
@@ -183,14 +184,51 @@ const PartDetailFront = () => {
   const [adding, setAdding] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
 
-  useEffect(() => {
-    const token = getAuthToken();
-    if (!token) return;
-    fetch(`${apiBase}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => setCurrentUser(d?.user || null))
-      .catch(() => {});
+  const syncCurrentUser = useCallback(async () => {
+    setAuthLoading(true);
+    try {
+      const token = getAuthToken();
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${apiBase}/api/auth/me`, {
+        headers,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        setCurrentUser(null);
+        return;
+      }
+      const data = await res.json();
+      setCurrentUser(data?.user || null);
+    } catch {
+      setCurrentUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    syncCurrentUser();
+  }, [syncCurrentUser]);
+
+  useEffect(() => {
+    const handleFocus = () => syncCurrentUser();
+    const handleStorage = (e) => {
+      if (!e || e.key === "auth_token") {
+        syncCurrentUser();
+      }
+    };
+    const handleAuthTokenChange = () => syncCurrentUser();
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("auth-token-changed", handleAuthTokenChange);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("auth-token-changed", handleAuthTokenChange);
+    };
+  }, [syncCurrentUser]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -224,7 +262,9 @@ const PartDetailFront = () => {
 
   const images = useMemo(() => getPartImages(part), [part]);
   const badge = conditionBadge(part?.condition);
-  const inStock = (part?.quantity || 0) > 0;
+  const isSold = part?.status === "sold";
+  const inStock =
+    !isSold && (part?.quantity || 0) > 0 && part?.status === "active";
   const ownPart = Boolean(currentUser && part?.seller?._id && String(part.seller._id) === String(currentUser.id));
   const canBuy = Boolean(currentUser && inStock && !ownPart);
   const dailyPrice = Math.max(1, Math.round(Number(part?.price || 0) / 7));
@@ -574,8 +614,10 @@ const PartDetailFront = () => {
 
             <div className="pdf-buybox-body">
               <div className="pdf-status-pills">
-                <span className={`pdf-status-pill ${inStock ? "in-stock" : "out-stock"}`}>
-                  {inStock ? "In stock" : "Out of stock"}
+                <span
+                  className={`pdf-status-pill ${isSold ? "out-stock" : inStock ? "in-stock" : "out-stock"}`}
+                >
+                  {isSold ? "Sold" : inStock ? "In stock" : "Out of stock"}
                 </span>
                 {isInCart(part._id) && <span className="pdf-status-pill in-cart">Already in cart</span>}
               </div>
@@ -608,7 +650,11 @@ const PartDetailFront = () => {
                 </>
               )}
 
-              {!currentUser ? (
+              {authLoading ? (
+                <button type="button" className="pdf-btn-disabled" disabled>
+                  Checking sign-in...
+                </button>
+              ) : !currentUser ? (
                 <button type="button" className="pdf-btn-chat" onClick={() => navigate("/signin")}>
                   Sign in to buy
                 </button>
@@ -630,7 +676,7 @@ const PartDetailFront = () => {
                 </>
               ) : (
                 <button type="button" className="pdf-btn-disabled" disabled>
-                  {ownPart ? "Your Listing" : "Sold Out"}
+                  {ownPart ? "Your Listing" : isSold ? "Sold" : "Sold Out"}
                 </button>
               )}
 

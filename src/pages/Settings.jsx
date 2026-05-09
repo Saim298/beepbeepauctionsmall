@@ -16,7 +16,7 @@ const Settings = () => {
   const [mfaQR, setMfaQR] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const fileInput = useRef(null);
-  const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const load = async () => {

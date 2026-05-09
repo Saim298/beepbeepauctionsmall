@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PartsNavbar from '../components/PartsNavbar';
 
 const CloverCheckoutFailure = () => {
   const [searchParams] = useSearchParams();
   const errorCode = searchParams.get('error_code');
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem('clover_checkout_session_id');
+    } catch (_) {}
+  }, []);
 
   return (
     <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>

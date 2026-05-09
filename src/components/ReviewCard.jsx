@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import StarRating from './StarRating';
+import { getAuthToken } from '../api/client.js';
+
+const authHeaders = () => {
+  const token = getAuthToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, currentUser = null }) => {
   const [showFullComment, setShowFullComment] = useState(false);
@@ -26,7 +32,7 @@ const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...authHeaders()
         },
         body: JSON.stringify({ helpful })
       });
@@ -50,7 +56,7 @@ const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          ...authHeaders()
         },
         body: JSON.stringify({ message: responseText })
       });

@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { getAuthToken, apiRequest } from '../api/client.js';
 import PartsNavbar from '../components/PartsNavbar';
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const CheckoutFront = () => {
   const navigate = useNavigate();
@@ -147,6 +147,11 @@ const CheckoutFront = () => {
       });
 
       if (!session?.href) throw new Error('Failed to create Clover Hosted Checkout session.');
+      if (session?.checkoutSessionId) {
+        try {
+          localStorage.setItem('clover_checkout_session_id', String(session.checkoutSessionId));
+        } catch (_) {}
+      }
       window.location.href = session.href;
     } catch (err) {
       console.error(err);
@@ -167,6 +172,7 @@ const CheckoutFront = () => {
         })),
         shippingAddress: {
           fullName: shippingInfo.fullName,
+          email: shippingInfo.email,
           address: shippingInfo.address,
           city: shippingInfo.city,
           state: shippingInfo.state,

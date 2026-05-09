@@ -119,6 +119,13 @@ export const CartProvider = ({ children }) => {
       throw new Error('Please sign in to add items to cart');
     }
 
+    if (part?.status && part.status !== 'active') {
+      throw new Error('This listing is no longer available.');
+    }
+    if ((part?.quantity || 0) < 1) {
+      throw new Error('This item is out of stock.');
+    }
+
     const cartItem = {
       partId: part._id,
       name: part.name,

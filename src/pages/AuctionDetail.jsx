@@ -14,7 +14,7 @@ import {
 import { MdGavel } from 'react-icons/md';
 import io from 'socket.io-client';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 const AuctionDetail = () => {
   const { auctionId } = useParams();

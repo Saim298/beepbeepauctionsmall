@@ -4,58 +4,100 @@ import { FiLoader } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { apiRequest } from '../api/client.js';
 import PartsNavbar from '../components/PartsNavbar';
+import {
+  buildCloverSuccessBrowserPath,
+  isBadCloverSessionQueryValue,
+  resolveSessionIdFromParams
+} from '../utils/cloverSuccessSession.js';
 
 const POLL_MS = 1500;
 const MAX_POLLS = 40;
 
 function resolveSessionId(searchParams) {
-  const raw =
-    searchParams.get('session_id') ||
-    searchParams.get('checkout_session_id') ||
-    searchParams.get('checkoutSessionId') ||
-    searchParams.get('id') ||
-    '';
-  const v = String(raw).trim();
-  if (!v) return '';
-  const upper = v.toUpperCase();
-  if (upper.includes('CHECKOUT_SESSION_ID') || upper === '{CHECKOUT_SESSION_ID}') {
+  return resolveSessionIdFromParams((k) => searchParams.get(k));
+}
+
+function resolveStoredSessionId() {
+  try {
+    const raw = localStorage.getItem('clover_checkout_session_id') || '';
+    const v = String(raw).trim();
+    if (!v) return '';
+    if (isBadCloverSessionQueryValue(v)) return '';
+    return v;
+  } catch {
     return '';
   }
-  return v;
 }
 
 const CloverCheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
-  const sessionId = resolveSessionId(searchParams);
+  const sessionIdFromUrl = resolveSessionId(searchParams);
+  const sessionId = sessionIdFromUrl || resolveStoredSessionId();
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [message, setMessage] = useState('Confirming your payment…');
   const [failed, setFailed] = useState(false);
   const doneRef = useRef(false);
+  const urlCleanedRef = useRef(false);
+
+  /**
+   * Replace literal `{CHECKOUT_SESSION_ID}` (or missing param) with a real id in the address bar for clarity.
+   */
+  const normalizeSuccessUrlOnce = (realId) => {
+    if (!realId || urlCleanedRef.current) return;
+    try {
+      const next = buildCloverSuccessBrowserPath(window.location.href, realId);
+      if (next) {
+        window.history.replaceState({}, '', next);
+      }
+      urlCleanedRef.current = true;
+    } catch (_) {}
+  };
 
   useEffect(() => {
-    if (!sessionId) {
-      setFailed(true);
-      setMessage(
-        'Missing or invalid checkout session in the URL (Clover did not replace {CHECKOUT_SESSION_ID}, or use session_id / checkout_session_id). Set success URL in Clover or env to use placeholders. Return to cart and complete checkout again.'
-      );
-      return undefined;
-    }
-
     let cancelled = false;
     let timeoutId;
     let polls = 0;
+    let activeSessionId = sessionId;
+
+    const resolveLatestIntentSession = async () => {
+      const latest = await apiRequest('/api/checkout/hosted-intent/latest/status');
+      if (latest?.checkoutSessionId) {
+        const id = String(latest.checkoutSessionId).trim();
+        if (id) {
+          try {
+            localStorage.setItem('clover_checkout_session_id', id);
+          } catch (_) {}
+          return id;
+        }
+      }
+      return '';
+    };
 
     const tick = async () => {
       if (cancelled || doneRef.current) return;
       try {
+        if (!activeSessionId) {
+          activeSessionId = await resolveLatestIntentSession();
+          if (!activeSessionId) {
+            throw new Error(
+              'Missing checkout session in URL and no recent checkout session found for your account.'
+            );
+          }
+        }
+
+        normalizeSuccessUrlOnce(activeSessionId);
+
         const data = await apiRequest(
-          `/api/checkout/hosted-intent/${encodeURIComponent(sessionId)}/status`
+          `/api/checkout/hosted-intent/${encodeURIComponent(activeSessionId)}/status`
         );
         if (cancelled || doneRef.current) return;
 
         if (data.status === 'completed' && data.order) {
           doneRef.current = true;
+          try {
+            localStorage.removeItem('clover_checkout_session_id');
+          } catch (_) {}
           clearCart();
           setMessage(`Order ${data.order.orderNumber || ''} confirmed. Redirecting…`);
           navigate('/user/orders', { replace: true });
@@ -78,6 +120,19 @@ const CloverCheckoutSuccess = () => {
         }
         timeoutId = window.setTimeout(tick, POLL_MS);
       } catch (e) {
+        if (
+          String(e?.message || '').toLowerCase().includes('not found') &&
+          !sessionId &&
+          !cancelled &&
+          !doneRef.current
+        ) {
+          // Latest intent could be racing with webhook writes; retry polling.
+          polls += 1;
+          if (polls < MAX_POLLS) {
+            timeoutId = window.setTimeout(tick, POLL_MS);
+            return;
+          }
+        }
         if (!cancelled && !doneRef.current) {
           setFailed(true);
           setMessage(e.message || 'Could not verify checkout status.');

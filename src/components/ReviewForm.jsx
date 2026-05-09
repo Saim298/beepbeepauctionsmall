@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import StarRating from './StarRating';
+import { getAuthToken } from '../api/client.js';
+
+const authHeaders = () => {
+  const token = getAuthToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 const ReviewForm = ({ partId, onReviewSubmitted, onCancel, existingReview = null }) => {
   const [formData, setFormData] = useState({
@@ -77,13 +83,10 @@ const ReviewForm = ({ partId, onReviewSubmitted, onCancel, existingReview = null
     }
 
     setLoading(true);
-    
     try {
       // Get purchase ID to verify eligibility
       const eligibilityResponse = await fetch(`/api/reviews/can-review/${partId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: authHeaders()
       });
       
       const eligibility = await eligibilityResponse.json();
@@ -124,9 +127,7 @@ const ReviewForm = ({ partId, onReviewSubmitted, onCancel, existingReview = null
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: authHeaders(),
         body: formDataToSend
       });
 

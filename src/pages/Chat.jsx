@@ -8,7 +8,7 @@ import './chat.css'
 import './dashboard.css'
 import { getAuthToken } from '../api/client.js'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const authHeader = () => {
   const t = getAuthToken()

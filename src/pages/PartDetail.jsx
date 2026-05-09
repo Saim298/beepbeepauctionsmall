@@ -6,7 +6,7 @@ import { getAuthToken } from '../api/client.js'
 import { useCart } from '../context/CartContext.jsx'
 import './dashboard.css'
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const PartDetail = () => {
   const { id } = useParams()
@@ -152,6 +152,8 @@ const PartDetail = () => {
 
   const conditionBadge = getConditionBadge(part.condition)
   const isOwnPart = currentUser && part.seller._id === currentUser.id
+  const isSold = part.status === 'sold'
+  const canPurchase = part.status === 'active' && (part.quantity || 0) > 0
 
   return (
     <div className="dashboard-root" data-theme={theme}>
@@ -252,9 +254,12 @@ const PartDetail = () => {
                     <h2 style={{ margin: 0, color: 'var(--primary-500)', fontSize: '28px', fontWeight: '700' }}>
                       ${part.price?.toLocaleString()}
                     </h2>
-                    <span className="badge bg-success" style={{ fontSize: '12px' }}>
+                    <span
+                      className={`badge ${isSold ? 'bg-secondary' : 'bg-success'}`}
+                      style={{ fontSize: '12px' }}
+                    >
                       <FiPackage style={{ marginRight: '4px' }} />
-                      {part.quantity} in stock
+                      {isSold ? 'Sold' : `${part.quantity} in stock`}
                     </span>
                   </div>
                   
@@ -282,7 +287,7 @@ const PartDetail = () => {
                       className="pill primary"
                       style={{ flex: 1, padding: '12px 24px', fontSize: '16px', fontWeight: '600' }}
                       onClick={handleBuyNow}
-                      disabled={buying || part.quantity === 0}
+                      disabled={buying || !canPurchase}
                     >
                       {buying ? (
                         <>

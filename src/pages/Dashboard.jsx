@@ -38,7 +38,7 @@ const getPartImages = (part) => {
 const toAbsUrl = (url) => {
   if (!url) return "/assets/images/handpicked-img-1.webp";
   if (url.startsWith("http")) return url;
-  return `${import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'}${url}`;
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
 };
 
 const DEFAULT_STATS = {

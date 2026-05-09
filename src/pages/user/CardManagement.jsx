@@ -3,7 +3,7 @@ import { DashboardAppChrome, DashboardMenuButton } from '../../components/Dashbo
 import '../../pages/dashboard.css'
 import { FiCreditCard, FiPlus, FiCheck, FiTrash2, FiShield } from 'react-icons/fi'
 
-const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 const CardManagement = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')
