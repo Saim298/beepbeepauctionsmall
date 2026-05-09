@@ -72,8 +72,11 @@ const PartsListingFront = () => {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const toAbsUrl = (u) => {
     if (!u) return "";
-    if (u.startsWith("http") || u.startsWith("data:")) return u;
-    return `${apiBase}${u}`;
+    const s = String(u).trim();
+    if (s.startsWith("http") || s.startsWith("data:")) return s;
+    if (s.startsWith("//")) return `https:${s}`;
+    const path = s.startsWith("/") ? s : `/${s}`;
+    return `${String(apiBase).replace(/\/$/, "")}${path}`;
   };
 
   const clearAllFilters = () => {

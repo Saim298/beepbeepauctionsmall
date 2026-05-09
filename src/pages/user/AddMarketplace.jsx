@@ -1,9 +1,40 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import "../../pages/dashboard.css";
 import { DashboardAppChrome, DashboardMenuButton } from "../../components/DashboardAppChrome.jsx";
 import { getAuthToken } from "../../api/client.js";
 
 const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+function mapApiPartToForm(p) {
+  if (!p) return null;
+  return {
+    name: p.name || "",
+    partNumber: p.partNumber || "",
+    brand: p.brand || "",
+    category: "",
+    subcategory: p.subcategory || "",
+    compatibility: p.compatibility || "",
+    year: p.year || "",
+    condition: p.condition || "new",
+    location: p.location || "",
+    descriptionHtml: p.descriptionHtml || "",
+    price: p.price != null && p.price !== "" ? String(p.price) : "",
+    quantity: p.quantity != null ? String(p.quantity) : "1",
+    weight: p.weight != null && p.weight !== "" ? String(p.weight) : "",
+    dimensions: p.dimensions || "",
+    warranty: p.warranty || "",
+    returnPolicy: p.returnPolicy || "7_days",
+    oem: Boolean(p.oem),
+    aftermarket: p.aftermarket !== false,
+    used: Boolean(p.used),
+    remanufactured: Boolean(p.remanufactured),
+    partType: p.category || "engine",
+    material: p.material || "",
+    color: p.color || "",
+    sellerNotes: p.sellerNotes || ""
+  };
+}
 
 // Reuse the same RichTextEditor from AddCar
 const RichTextEditor = ({ value, onChange }) => {
@@ -192,7 +223,13 @@ const RichTextEditor = ({ value, onChange }) => {
 };
 
 const UserAddSparePart = () => {
+  const { id: editId } = useParams();
+  const navigate = useNavigate();
+  const isEdit = Boolean(editId);
   const [theme, setTheme] = useState(localStorage.getItem("beep-theme") || "dark");
+  const [loadingPart, setLoadingPart] = useState(Boolean(editId));
+  const [loadError, setLoadError] = useState("");
+  const [existingMedia, setExistingMedia] = useState([]);
   const [makes, setMakes] = useState([]);
   const [models, setModels] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -250,6 +287,57 @@ const UserAddSparePart = () => {
     }, 250);
     return () => { controller.abort(); clearTimeout(timer); };
   }, [categorySearch]);
+
+  useEffect(() => {
+    if (!editId) {
+      setLoadingPart(false);
+      return;
+    }
+    let cancelled = false;
+    const token = getAuthToken();
+    (async () => {
+      try {
+        setLoadError("");
+        setLoadingPart(true);
+        const partRes = await fetch(`${apiBase}/api/parts/${editId}`);
+        const body = await partRes.json().catch(() => ({}));
+        if (!partRes.ok || !body.part) {
+          throw new Error(body.error || body.message || "Part not found");
+        }
+        const p = body.part;
+        const meRes = token
+          ? await fetch(`${apiBase}/api/auth/me`, {
+              headers: { Authorization: `Bearer ${token}` }
+            }).then((r) => r.json())
+          : {};
+        const myId =
+          meRes?.user?.id ??
+          meRes?.user?._id ??
+          meRes?.id ??
+          meRes?._id;
+        const sellerId =
+          typeof p.seller === "object" && p.seller !== null
+            ? p.seller._id || p.seller.id
+            : p.seller;
+        if (myId && sellerId && String(myId) !== String(sellerId)) {
+          throw new Error("You can only edit your own listings.");
+        }
+        const mapped = mapApiPartToForm(p);
+        if (mapped && !cancelled) {
+          setForm((prev) => ({ ...prev, ...mapped }));
+          setExistingMedia(Array.isArray(p.media) ? p.media : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err.message || "Failed to load part");
+        }
+      } finally {
+        if (!cancelled) setLoadingPart(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [editId]);
+
   useEffect(() => {
     if (form.makeId)
       fetch(`${apiBase}/api/makes/${form.makeId}/models`)
@@ -258,72 +346,135 @@ const UserAddSparePart = () => {
     else setModels([]);
   }, [form.makeId]);
 
+  const buildPartPayload = () => ({
+    name: form.name,
+    partNumber: form.partNumber,
+    brand: form.brand,
+    category: form.partType,
+    subcategory: form.subcategory,
+    compatibility: form.compatibility,
+    year: form.year,
+    condition: form.condition,
+    location: form.location,
+    descriptionHtml: form.descriptionHtml,
+    price: Number(form.price) || 0,
+    quantity: Number(form.quantity) || 1,
+    weight: form.weight ? Number(form.weight) : undefined,
+    dimensions: form.dimensions,
+    warranty: form.warranty,
+    returnPolicy: form.returnPolicy,
+    oem: form.oem,
+    aftermarket: form.aftermarket,
+    used: form.condition.includes("used"),
+    remanufactured: form.condition === "remanufactured",
+    material: form.material,
+    color: form.color,
+    sellerNotes: form.sellerNotes,
+    listingType: "part"
+  });
+
+  const uploadNewMedia = async (partId) => {
+    const token = getAuthToken();
+    if (!mediaFiles.length || !partId) return;
+    const formData = new FormData();
+    mediaFiles.forEach((f) => formData.append("media", f));
+    const up = await fetch(`${apiBase}/api/my/parts/${partId}/media`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+    const upJson = await up.json().catch(() => ({}));
+    if (!up.ok) {
+      throw new Error(upJson.error || upJson.message || "Failed to upload images");
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     const token = getAuthToken();
-    
+    if (!token) {
+      alert("Please sign in to list or edit parts.");
+      return;
+    }
+
     try {
-      // Create the spare part listing
-      const partPayload = {
-        name: form.name,
-        partNumber: form.partNumber,
-        brand: form.brand,
-        category: form.partType,
-        subcategory: form.subcategory,
-        compatibility: form.compatibility,
-        year: form.year,
-        condition: form.condition,
-        location: form.location,
-        descriptionHtml: form.descriptionHtml,
-        price: Number(form.price) || 0,
-        quantity: Number(form.quantity) || 1,
-        weight: form.weight ? Number(form.weight) : undefined,
-        dimensions: form.dimensions,
-        warranty: form.warranty,
-        returnPolicy: form.returnPolicy,
-        oem: form.oem,
-        aftermarket: form.aftermarket,
-        used: form.condition.includes('used'),
-        remanufactured: form.condition === 'remanufactured',
-        partType: form.partType,
-        material: form.material,
-        color: form.color,
-        sellerNotes: form.sellerNotes,
-        listingType: 'part',
-        status: 'active',
-        media: []
-      };
+      const basePayload = buildPartPayload();
+      let partId;
 
-      const partResponse = await fetch(`${apiBase}/api/my/parts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(partPayload),
-      });
-      
-      const partListing = await partResponse.json();
-      
-      if (!partResponse.ok || !partListing._id) {
-        throw new Error(partListing.message || 'Failed to create part listing');
-      }
-
-      // Upload media files if any
-      if (mediaFiles.length) {
-        const formData = new FormData();
-        mediaFiles.forEach((f) => formData.append("media", f));
-        await fetch(`${apiBase}/api/my/parts/${partListing._id}/media`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
+      if (isEdit) {
+        const partResponse = await fetch(`${apiBase}/api/my/parts/${editId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(basePayload)
         });
+        const data = await partResponse.json().catch(() => ({}));
+        if (!partResponse.ok) {
+          throw new Error(data.error || data.message || "Failed to update part");
+        }
+        partId = data.part?._id || editId;
+      } else {
+        const partPayload = {
+          ...basePayload,
+          status: "active",
+          media: []
+        };
+        const partResponse = await fetch(`${apiBase}/api/my/parts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(partPayload)
+        });
+        const partListing = await partResponse.json().catch(() => ({}));
+        partId =
+          partListing.part?._id ||
+          partListing.part?.id ||
+          partListing._id;
+        if (!partResponse.ok || !partId) {
+          throw new Error(
+            partListing.error ||
+              partListing.message ||
+              "Failed to create part listing"
+          );
+        }
       }
 
-      alert("Part listed successfully! It is now available for purchase.");
-      window.location.href = "/user/parts";
+      await uploadNewMedia(partId);
+
+      alert(
+        isEdit
+          ? "Part updated successfully."
+          : "Part listed successfully! It is now available for purchase."
+      );
+      navigate("/user/parts", { replace: true });
     } catch (error) {
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  const removeExistingMedia = async (index) => {
+    const token = getAuthToken();
+    if (!editId || !token) return;
+    if (!window.confirm("Remove this image from the listing?")) return;
+    try {
+      const r = await fetch(
+        `${apiBase}/api/my/parts/${editId}/media/${index}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        throw new Error(j.error || j.message || "Failed to remove media");
+      }
+      setExistingMedia((prev) => prev.filter((_, i) => i !== index));
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -334,8 +485,10 @@ const UserAddSparePart = () => {
           <header className="dashboard-topbar">
             <div className="topbar-left">
               <DashboardMenuButton />
-              <h1 className="page-title">List Spare Part</h1>
-              <span className="page-subtitle">Add your car part to the marketplace</span>
+              <h1 className="page-title">{isEdit ? "Edit Spare Part" : "List Spare Part"}</h1>
+              <span className="page-subtitle">
+                {isEdit ? "Update your listing and media" : "Add your car part to the marketplace"}
+              </span>
             </div>
             <div className="topbar-right">
               <button className="pill" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
@@ -344,6 +497,20 @@ const UserAddSparePart = () => {
             </div>
           </header>
 
+          {loadError && (
+            <div className="panel glass" style={{ padding: 16, marginBottom: 16, border: "1px solid var(--red-500, #c00)" }}>
+              <p className="mb-0">{loadError}</p>
+              <button type="button" className="pill mt-2" onClick={() => navigate("/user/parts")}>
+                Back to my parts
+              </button>
+            </div>
+          )}
+
+          {loadingPart ? (
+            <div className="panel glass" style={{ padding: 24 }}>
+              <p className="mb-0">Loading part…</p>
+            </div>
+          ) : (
           <form className="panel glass" style={{ padding: 16 }} onSubmit={onSubmit}>
             <div className="form-grid">
               {/* Part Details Section */}
@@ -570,6 +737,36 @@ const UserAddSparePart = () => {
 
               <div className="form-row">
                 <label>Media (images/videos)</label>
+                {isEdit && existingMedia.length > 0 && (
+                  <div className="d-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 8, marginBottom: 12 }}>
+                    {existingMedia.map((m, idx) => {
+                      const src =
+                        m.url && (m.url.startsWith("http") || m.url.startsWith("data:"))
+                          ? m.url
+                          : `${String(apiBase).replace(/\/$/, "")}${m.url?.startsWith("/") ? m.url : `/${m.url || ""}`}`;
+                      return (
+                        <div key={`${m.url}-${idx}`} style={{ position: "relative", border: "1px solid var(--glass-300)", borderRadius: 8, overflow: "hidden" }}>
+                          {m.type === "video" ? (
+                            <video src={src} style={{ width: "100%", height: 100, objectFit: "cover" }} muted />
+                          ) : (
+                            <img src={src} alt="" style={{ width: "100%", height: 100, objectFit: "cover" }} onError={(e) => { e.target.style.display = "none"; }} />
+                          )}
+                          <button
+                            type="button"
+                            className="pill"
+                            style={{ position: "absolute", top: 4, right: 4, padding: "2px 8px", fontSize: 11 }}
+                            onClick={() => removeExistingMedia(idx)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="muted" style={{ fontSize: 13, margin: "0 0 8px" }}>
+                  {isEdit ? "Add more files below; they upload when you save." : "Choose one or more images. They attach after the listing is created."}
+                </p>
                 <input
                   className="input glass big"
                   type="file"
@@ -612,9 +809,12 @@ const UserAddSparePart = () => {
             </div>
 
             <div className="actions" style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
-              <button className="pill" type="submit">List Part</button>
+              <button className="pill" type="submit" disabled={Boolean(loadError)}>
+                {isEdit ? "Save changes" : "List Part"}
+              </button>
             </div>
           </form>
+          )}
         </div>
       </main>
     </DashboardAppChrome>
