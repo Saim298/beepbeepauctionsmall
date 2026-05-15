@@ -3,28 +3,60 @@ import { getAuthToken } from '../api/client.js';
 
 const CartContext = createContext();
 
+/** Stock cap from part listing; may be missing on older saved carts. */
+function effectiveMaxQty(maxQuantity) {
+  const m = Number(maxQuantity);
+  if (Number.isFinite(m) && m >= 1) return m;
+  return null;
+}
+
+/** Clamp line quantity to stock (and at least 1 if line exists). */
+function clampLineQuantity(quantity, maxQuantity) {
+  const cap = effectiveMaxQty(maxQuantity);
+  const q = Math.max(1, Math.floor(Number(quantity) || 1));
+  if (cap == null) return q;
+  return Math.min(q, cap);
+}
+
+function normalizeCartItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  return list.map((item) => {
+    const q = clampLineQuantity(item.quantity, item.maxQuantity);
+    return { ...item, quantity: q };
+  });
+}
+
 const cartReducer = (state, action) => {
   switch (action.type) {
-    case 'SET_CART':
+    case 'SET_CART': {
+      const items = normalizeCartItems(action.payload.items);
+      const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       return {
         ...state,
-        items: action.payload.items || [],
-        total: action.payload.total || 0,
+        items,
+        total,
         loading: false
       };
+    }
 
-    case 'ADD_TO_CART':
+    case 'ADD_TO_CART': {
       const existingItem = state.items.find(item => item.partId === action.payload.partId);
       let updatedItems;
-      
+
       if (existingItem) {
+        const capA = effectiveMaxQty(existingItem.maxQuantity);
+        const capB = effectiveMaxQty(action.payload.maxQuantity);
+        const cap = capA != null && capB != null ? Math.min(capA, capB) : (capA ?? capB);
+        const mergedQty = existingItem.quantity + action.payload.quantity;
+        const quantity = cap == null ? mergedQty : Math.min(mergedQty, cap);
         updatedItems = state.items.map(item =>
           item.partId === action.payload.partId
-            ? { ...item, quantity: item.quantity + action.payload.quantity }
+            ? { ...item, ...action.payload, quantity }
             : item
         );
       } else {
-        updatedItems = [...state.items, action.payload];
+        const quantity = clampLineQuantity(action.payload.quantity, action.payload.maxQuantity);
+        updatedItems = [...state.items, { ...action.payload, quantity }];
       }
       
       const newTotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -34,6 +66,7 @@ const cartReducer = (state, action) => {
         items: updatedItems,
         total: newTotal
       };
+    }
 
     case 'REMOVE_FROM_CART':
       const filteredItems = state.items.filter(item => item.partId !== action.payload.partId);
@@ -45,10 +78,10 @@ const cartReducer = (state, action) => {
         total: updatedTotal
       };
 
-    case 'UPDATE_QUANTITY':
+    case 'UPDATE_QUANTITY': {
       const updatedItemsQty = state.items.map(item =>
         item.partId === action.payload.partId
-          ? { ...item, quantity: action.payload.quantity }
+          ? { ...item, quantity: clampLineQuantity(action.payload.quantity, item.maxQuantity) }
           : item
       ).filter(item => item.quantity > 0);
       
@@ -59,6 +92,7 @@ const cartReducer = (state, action) => {
         items: updatedItemsQty,
         total: totalWithUpdatedQty
       };
+    }
 
     case 'CLEAR_CART':
       return {

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
+import { authFetchInit } from '../../api/client'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
 
 const MyListings = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')
@@ -16,10 +17,7 @@ const MyListings = () => {
   useEffect(() => { localStorage.setItem('beep-theme', theme) }, [theme])
   useEffect(() => {
     const controller = new AbortController()
-    const token = localStorage.getItem('auth_token')
-    fetch(`${API}/api/my/cars?page=${page}&limit=${limit}&q=${encodeURIComponent(q)}&sort=${encodeURIComponent(sort)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}, signal: controller.signal
-    })
+    fetch(`${API}/api/my/cars?page=${page}&limit=${limit}&q=${encodeURIComponent(q)}&sort=${encodeURIComponent(sort)}`, authFetchInit({ signal: controller.signal }))
       .then(r => r.json())
       .then(({ data, total: t }) => { setCars(data || []); setTotal(t || 0) })
       .catch(() => {})
@@ -89,7 +87,7 @@ const MyListings = () => {
             <div className="auctions-grid">
               {cars.map((c) => (
                 <a key={c._id} className="auction-card panel glass" href={`/cars/${c._id}`}>
-                  <div className="thumb-xl"><img src={`http://localhost:5000${c.media?.[0]?.url}` || '/assets/images/handpicked-img-1.webp'} alt={c.name} /></div>
+                  <div className="thumb-xl"><img src={`https://beep-auctions-backend.onrender.com${c.media?.[0]?.url}` || '/assets/images/handpicked-img-1.webp'} alt={c.name} /></div>
                   <div className="card-body">
                     <div className="title-row"><h4>{c.name}</h4><span className="year">{c.year}</span></div>
                     <div className="metrics"><div className="metric"><span className="muted">Price</span><strong>${c.price?.toLocaleString()}</strong></div><div className="metric"><span className="muted">Make</span><strong>{c.make?.name}</strong></div><div className="metric"><span className="muted">Model</span><strong>{c.model?.name}</strong></div></div>

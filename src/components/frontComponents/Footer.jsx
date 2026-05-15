@@ -1,6 +1,7 @@
 import React from "react";
 import image from "../../image/logo.png";
 import { Link } from "react-router-dom";
+import { BRAND_NAME } from "../../constants/brand.js";
 
 const Footer = () => {
   return (
@@ -201,7 +202,7 @@ const Footer = () => {
           </div>
           <div className="abs-area position-absolute start-50 item-centerX pe-none">
             <span className="text-uppercase text-gradient second footer-text display-four">
-              Beep Beep
+              {BRAND_NAME}
             </span>
           </div>
         </div>
@@ -210,7 +211,7 @@ const Footer = () => {
     <div className="col-md-6 order-1 order-md-0">
       <div className="copyright text-center text-md-start">
         <p className="n1-color">
-          <Link to="/">Beep Beep</Link> ©
+          <Link to="/">{BRAND_NAME}</Link> ©
         </p>
       </div>
     </div>
@@ -266,7 +267,7 @@ const Footer = () => {
         <div className="d-flex flex-row align-items-center gap-3 mt-3 mt-md-0">
           <Link to="/comming-soon">Terms & Conditions</Link>
           <span className="cus-border border-end d-none d-sm-flex h-100"></span>
-          <Link to="/comming-soon">Privacy Policy</Link>
+          <Link to="/privacy">Privacy Policy</Link>
         </div>
 
       </div>

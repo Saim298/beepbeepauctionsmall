@@ -1,197 +1,184 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { apiRequest, saveAuthToken } from "../api/client";
-import logo from "../image/logo.png"
-import { MobileBottomBarAuth } from "../components/MobileBottomBar";
+import React, { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { apiRequest, saveAuthToken } from '../api/client';
+import logo from '../image/logo.png';
+import { MobileBottomBarAuth } from '../components/MobileBottomBar';
+import LuxuryAuthShell from '../components/auth/LuxuryAuthShell';
+import GlassTextField from '../components/auth/GlassTextField';
+import PasswordField from '../components/auth/PasswordField';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons';
+import '../styles/authPremium.css';
+import { useNotify } from '../context/NotificationContext.jsx';
+
+/** Internal path only — prevents open redirects after sign-in. */
+function postLoginPath(searchParams) {
+  const raw = searchParams.get('redirect') || searchParams.get('returnUrl') || '';
+  if (!raw || typeof raw !== 'string') return '/dashboard';
+  const t = raw.trim();
+  if (!t.startsWith('/') || t.startsWith('//')) return '/dashboard';
+  return t;
+}
 
 const Signin = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mfaToken, setMfaToken] = useState("");
-  const [serverMfaToken, setServerMfaToken] = useState("");
-  const [error, setError] = useState("");
+  const [searchParams] = useSearchParams();
+  const { notify } = useNotify();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
+  const [mfaToken, setMfaToken] = useState('');
+  const [serverMfaToken, setServerMfaToken] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const data = await apiRequest("/api/auth/login", {
-        method: "POST",
-        body: { email, password },
-      });
-      if (data.mfaRequired) {
-        setServerMfaToken(data.mfaToken);
-      } else {
-        saveAuthToken(data.token);
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
 
-  const handleVerifyMfa = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const data = await apiRequest("/api/auth/mfa/verify-login", {
-        method: "POST",
-        token: serverMfaToken,
-        body: { token: mfaToken },
-      });
-      saveAuthToken(data.token);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  
-  // Create state parameter for OAuth to remember current client URL
   const createOAuthUrl = (provider) => {
     const clientUrl = window.location.origin;
     const state = btoa(JSON.stringify({ clientUrl }));
     return `${apiBase}/api/auth/${provider}?state=${encodeURIComponent(state)}`;
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const data = await apiRequest('/api/auth/login', {
+        method: 'POST',
+        body: { email, password }
+      });
+      if (data.mfaRequired) {
+        setServerMfaToken(data.mfaToken);
+      } else {
+        saveAuthToken(data.token, { persistent: remember });
+        notify({ title: 'Signed in', message: 'Welcome back.', severity: 'success' });
+        navigate(postLoginPath(searchParams));
+      }
+    } catch (err) {
+      const msg = err.message || 'Unable to sign in';
+      setError(msg);
+      notify({ title: 'Sign in failed', message: msg, severity: 'error' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyMfa = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const data = await apiRequest('/api/auth/mfa/verify-login', {
+        method: 'POST',
+        token: serverMfaToken,
+        body: { token: mfaToken }
+      });
+      saveAuthToken(data.token, { persistent: remember });
+      notify({ title: 'Signed in', message: 'Welcome back.', severity: 'success' });
+      navigate(postLoginPath(searchParams));
+    } catch (err) {
+      const msg = err.message || 'Verification failed';
+      setError(msg);
+      notify({ title: 'MFA failed', message: msg, severity: 'error' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <MobileBottomBarAuth page="signin" />
-      {/* <!-- Authentication start--> */}
-      <section class="authentication banner-section mx-2 mx-md-4 mx-xl-6 my-2 my-md-4 my-xl-6">
-        <div class="container-fluid d-block d-lg-grid px-3 px-xl-0 position-relative">
-          <div class="row g-9 g-lg-0 align-items-center justify-content-center">
-            <div class="col-md-7 col-xl-6 h-100">
-              <div class="row justify-content-center h-100">
-                <div class="col-xl-11 col-xxl-9 py-4 pe-2 pe-lg-10">
-                  <div class="d-flex flex-column justify-content-between gap-4 gap-md-6 h-100">
-                    <div class="logo-area">
-                      <Link to="/"
-                        class="nav-brand align-items-center gap-2"
-                      >
-                        <img src={logo} alt="logo" style={{width: "100px"}} />
-                      </Link>
-                    </div>
-                    <div class="mid-area py-10 d-grid gap-6 gap-md-10">
-                    
-                      <div class="head-area d-grid gap-3 gap-md-5">
-                        <h2 class="n4-color">Welcome Back!</h2>
-                        <p class="n4-color fs-six">
-                          Sign in to your account and join us
-                        </p>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div class="row gy-6 gy-md-10">
-                          <div class="col-md-12 d-grid gap-2">
-                            <label
-                              for="auth-email"
-                              class="n4-color text-capitalize"
-                            >
-                              Enter Your Email ID
-                            </label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="email" id="auth-email" class="w-100 n4-color" placeholder="Write your email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-12 d-grid gap-2">
-                            <label
-                              for="auth-password"
-                              class="n4-color text-capitalize"
-                            >
-                              Enter Your Password
-                            </label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="password" id="auth-password" class="w-100 n4-color" placeholder="Write your password" value={password} onChange={(e)=>setPassword(e.target.value)} required />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-6 d-flex">
-                            <button
-                              type="submit"
-                              aria-label="Submit Button"
-                              class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12"
-                            >
-                              <span class="fs-eight n1-color transition text-uppercase fw-semibold">
-                                Submit
-                              </span>
-                            </button>
-                          </div>
-                          <div class="col-sm-12 d-center flex-wrap justify-content-between gap-3 gap-sm-0">
-                            <div class="d-grid gap-6 gap-md-10">
-                              <p class="n4-color">
-                                Don’t have an account?{" "}
-                                <Link to="/signup" class="p1-color">
-                                  Sign Up
-                                </Link>
-                              </p>
-                            </div>
-                            <div class="d-flex justify-content-end">
-                              <a href="javascript:void(0)" class="n4-color">
-                                Forget password
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                        {serverMfaToken && (
-                          <div class="mt-3">
-                            <label class="n4-color">Enter 6-digit code</label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="text" class="w-100 n4-color" placeholder="000000" value={mfaToken} onChange={(e)=>setMfaToken(e.target.value)} />
-                              </div>
-                            </div>
-                            <button onClick={handleVerifyMfa} class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12 mt-2">
-                              <span class="fs-eight n1-color transition text-uppercase fw-semibold">Verify MFA</span>
-                            </button>
-                          </div>
-                        )}
-
-                        {error && <p class="p1-color mt-2">{error}</p>}
-
-                        <div class="d-flex gap-2 mt-3">
-                          <a href={createOAuthUrl('google')} class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12">
-                            <span class="fs-eight n1-color transition text-uppercase fw-semibold">Sign in with Google</span>
-                          </a>
-                          <a href={createOAuthUrl('facebook')} class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12">
-                            <span class="fs-eight n1-color transition text-uppercase fw-semibold">Sign in with Facebook</span>
-                          </a>
-                        </div>
-                      </form>
-                    </div>
-                    <div class="end-area d-center">
-                      <p class="n4-color">
-                        By creating account you agree with our{" "}
-                        <a href="terms-conditions.html" class="p1-color">
-                          Terms of services
-                        </a>{" "}
-                        and{" "}
-                        <a href="privacy-policy.html" class="p1-color">
-                          Privacy Policy
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <LuxuryAuthShell
+        brandLogo={logo}
+        title="Welcome Back"
+        subtitle="Access live luxury vehicle auctions in real time."
+        footerLegal={
+          <>
+            By continuing you agree to our{' '}
+            <a href="/terms-conditions.html" className="lux-accent-link">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <Link to="/privacy" className="lux-accent-link">
+              Privacy Policy
+            </Link>
+            .
+          </>
+        }
+      >
+        {!serverMfaToken ? (
+          <form onSubmit={handleSubmit} noValidate>
+            <GlassTextField
+              id="auth-email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={setEmail}
+              required
+            />
+            <PasswordField id="auth-password" label="Password" autoComplete="current-password" value={password} onChange={setPassword} required />
+            <label className="lux-check">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              Remember me on this device
+            </label>
+            <button type="submit" className="lux-btn-primary" disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign In'}
+            </button>
+            <div className="lux-auth-meta">
+              <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.5)' }}>
+                New here?{' '}
+                <Link
+                  to={searchParams.get('redirect') ? `/signup?redirect=${encodeURIComponent(searchParams.get('redirect'))}` : '/signup'}
+                  className="lux-accent-link"
+                >
+                  Create account
+                </Link>
+              </span>
+              <Link to="/forgot-password" className="lux-auth-link">
+                Forgot password?
+              </Link>
             </div>
-            <div class="col-sm-7 col-md-5 col-xl-6 d-center justify-content-end mb-3 mb-md-0">
-              <div class="img-area position-relative d-center">
-                <img
-                  src="assets/images/auth-bg.webp"
-                  class="h-100 rounded-5"
-                  alt="img"
-                />
-              </div>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyMfa}>
+            <div className="lux-mfa-block">
+              <h4>Two-factor authentication</h4>
+              <p style={{ margin: '0 0 0.85rem', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.55)' }}>
+                Enter the 6-digit code from your authenticator app.
+              </p>
+              <GlassTextField
+                id="mfa-code"
+                label="Authenticator code"
+                type="text"
+                autoComplete="one-time-code"
+                value={mfaToken}
+                onChange={setMfaToken}
+              />
+              <button type="submit" className="lux-btn-primary" disabled={submitting}>
+                {submitting ? 'Verifying…' : 'Verify & continue'}
+              </button>
+              <button
+                type="button"
+                className="lux-auth-link"
+                style={{ marginTop: '1rem', width: '100%', textAlign: 'center', background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={() => {
+                  setServerMfaToken('');
+                  setMfaToken('');
+                  setError('');
+                }}
+              >
+                ← Back to sign in
+              </button>
             </div>
-          </div>
-        </div>
-      </section>
-      {/* <!-- Authentication end --> */}
+          </form>
+        )}
+        {error ? <div className="lux-banner-error">{error}</div> : null}
+
+        {!serverMfaToken && <SocialAuthButtons googleHref={createOAuthUrl('google')} facebookHref={createOAuthUrl('facebook')} variant="signin" />}
+      </LuxuryAuthShell>
+      <div className="lux-mobile-bottom-spacer" aria-hidden />
     </div>
   );
 };

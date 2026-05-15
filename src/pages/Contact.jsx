@@ -1,158 +1,360 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "../utils/Header";
 import Footer from "../components/frontComponents/Footer";
+import { useNotify } from "../context/NotificationContext.jsx";
+import { BRAND_NAME } from "../constants/brand.js";
+import "./ContactPremium.css";
 
-const Contact = () => {
+const HERO_IMG =
+  "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1600&q=85";
+const FINALE_IMG =
+  "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80";
+
+const SUPPORT_PHONE_DISPLAY = "+ 111 222 333";
+const SUPPORT_PHONE_TEL = "+111222333";
+const SUPPORT_EMAIL = "beepbeepauctions@gmail.com";
+const WHATSAPP_LINK = "https://wa.me/111222333";
+
+const API_BASE = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+
+const INQUIRY_TYPES = [
+  { value: "", label: "Select inquiry type" },
+  { value: "auction", label: "Auction Support" },
+  { value: "seller", label: "Seller Assistance" },
+  { value: "dealer", label: "Dealer Registration" },
+  { value: "technical", label: "Technical Support" },
+  { value: "payment", label: "Payment Issue" },
+  { value: "general", label: "General Inquiry" },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "How do I buy parts on the marketplace?",
+    a: "Browse listings, add items to your cart, and complete checkout. Verified sellers ship with tracked updates in your dashboard.",
+  },
+  {
+    q: "How do I list products as a seller?",
+    a: "Create an account, open your seller dashboard, and add parts with photos and pricing. Our team reviews new listings when required.",
+  },
+  {
+    q: "How do payments work?",
+    a: "Secure checkout processes your payment; sellers receive payout per platform rules. Contact us if you need help with an order.",
+  },
+  {
+    q: "How can I reach support?",
+    a: "Use this form, live chat when signed in, or email us directly. We typically reply within two business hours.",
+  },
+];
+
+const SOCIAL = [
+  { id: "ig", label: "Instagram", href: "https://www.instagram.com/beepbeepauctions", icon: "ph-instagram-logo" },
+  { id: "fb", label: "Facebook", href: "https://www.facebook.com/", icon: "ph-facebook-logo" },
+  { id: "li", label: "LinkedIn", href: "https://www.linkedin.com/company/beepbeepauctions", icon: "ph-linkedin-logo" },
+  { id: "x", label: "X", href: "https://x.com/beepbeepauctions", icon: "ph-x-logo" },
+];
+
+function Contact() {
+  const { notify } = useNotify();
+  const [openFaq, setOpenFaq] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    subject: "",
+    inquiryType: "",
+    message: "",
+  });
+
+  const inquiryLabel = useMemo(() => {
+    const row = INQUIRY_TYPES.find((x) => x.value === form.inquiryType);
+    return row?.label || "";
+  }, [form.inquiryType]);
+
+  const setField = useCallback((key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.fullName.trim() || !form.email.trim()) {
+      notify({ title: "Missing details", message: "Please enter your name and email.", severity: "warning" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      notify({ title: "Invalid email", message: "Please enter a valid email address.", severity: "warning" });
+      return;
+    }
+    if (!form.message.trim()) {
+      notify({ title: "Missing message", message: "Please enter a short message.", severity: "warning" });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          subject: form.subject.trim(),
+          inquiryType: form.inquiryType,
+          message: form.message.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg =
+          typeof data.message === "string"
+            ? data.message
+            : Array.isArray(data.errors)
+              ? data.errors.map((err) => err.msg || err.path).filter(Boolean).join(" · ")
+              : "Could not send. Try again.";
+        notify({ title: "Send failed", message: msg, severity: "warning" });
+        return;
+      }
+      notify({
+        title: "Message received",
+        message: "Our team will respond shortly.",
+        severity: "success",
+      });
+      setForm({
+        fullName: "",
+        email: "",
+        phone: "",
+        subject: "",
+        inquiryType: "",
+        message: "",
+      });
+    } catch {
+      notify({
+        title: "Network error",
+        message: "Check that the API is running and CORS allows this site.",
+        severity: "warning",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const scrollToForm = () => {
+    document.getElementById("cc-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <div>
+    <div className="cc-root">
       <Header />
-      {/* <!-- Contact Section start --> */}
-      <section
-        className="contact-section second position-relative p1-2nd-bg-color py-20 bg-img-start py-5"
-        data-bg="./assets/images/contact-bg-1.webp"
-      >
-        <div className="container-fluid cus-padding">
-          <div className="row gy-5 gy-lg-0 justify-content-between">
-            <div className="col-lg-6 col-xxl-6 order-1 order-xl-0 d-center flex-column flex-sm-row flex-lg-column flex-xl-row justify-content-end align-items-end mb-0 mb-lg-7">
-              <div className="col-12 col-sm-6 col-lg-8 col-xl-5 position-relative d-grid p1-bg-color py-6 py-md-8 px-5 px-md-7">
-                <span className="fs-six fw-light text-uppercase n1-color mt-1">
-                  Call Us
-                </span>
-                <span className="n1-color fw-bold text-uppercase fs-five">
-                  + 111 222 333
-                </span>
-                <div className="d-center fs-two n1-2nd-color p-1 position-absolute end-0 top-0">
-                  <i className="ph ph-phone-call"></i>
-                </div>
+      <main>
+        <section className="cc-hero" aria-labelledby="cc-hero-heading">
+          <div className="cc-ambient" aria-hidden />
+          <div className="cc-hero-grid">
+            <div className="cc-reveal">
+              <div className="cc-live-dot" role="status">
+                <span aria-hidden />
+                Live support online
               </div>
-              <div className="col-12 col-sm-6 col-lg-8 col-xl-6 position-relative d-grid p3-bg-color py-6 py-md-8 px-5 px-md-7">
-                <span className="fs-six fw-light text-uppercase n1-color mt-1">
-                  MAIL Us
-                </span>
-                <span className="n1-color fw-bold text-uppercase fs-five">
-                  <a
-                    href="cdn-cgi/l/email-protection"
-                    className="__cf_email__"
-                    data-cfemail="c8a1a6aea788adb0a9a5b8a4ade6aba7a5"
-                  >
-                    [email&#160;protected]
-                  </a>
-                </span>
-                <div className="d-center fs-two n1-2nd-color p-1 position-absolute end-0 top-0">
-                  <i className="ph ph-envelope-open"></i>
-                </div>
-              </div>
-            </div>
-            <div className="col-lg-6 col-xxl-6">
-              <div className="form-area cus-border border b-eleventh rounded-4 n1-3rd-bg-color py-6 py-md-12 py-lg-16 px-4 px-md-8 px-lg-12">
-                <div className="section-text mb-6 mb-md-10 d-grid gap-2">
-                  <span className="n4-color fw-medium text-uppercase">
-                    Have any Questions?
-                  </span>
-                  <h2 className="text-uppercase">
-                    <span className="n4-color">Drop Us</span>
-                    <span className="fw-normal n4-color">a Line</span>
-                  </h2>
-                  <span className="n4-color mt-1">
-                    We’ve been waiting for you!
-                  </span>
-                </div>
-                <form action="#">
-                  <div className="row gy-6 gy-md-10">
-                    <div className="col-md-6 col-lg-12 col-xl-6 d-grid gap-2">
-                      <label
-                        for="contact-name"
-                        className="n4-color text-capitalize"
-                      >
-                        Name:
-                      </label>
-                      <div className="input-area second cus-border border b-fourth rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                        <div className="input-item w-100">
-                          <input
-                            type="text"
-                            id="contact-name"
-                            className="w-100 n4-color"
-                            placeholder="Write your Name"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6 col-lg-12 col-xl-6 d-grid gap-2">
-                      <label
-                        for="contact-email"
-                        className="n4-color text-capitalize"
-                      >
-                        Email address:
-                      </label>
-                      <div className="input-area second cus-border border b-fourth rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                        <div className="input-item w-100">
-                          <input
-                            type="text"
-                            id="contact-email"
-                            className="w-100 n4-color"
-                            placeholder="Write your email"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-12 d-grid gap-2">
-                      <label
-                        for="contact-subject"
-                        className="n4-color text-capitalize"
-                      >
-                        subject:
-                      </label>
-                      <div className="input-area second cus-border border b-fourth rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                        <div className="input-item w-100">
-                          <input
-                            type="text"
-                            id="contact-subject"
-                            className="w-100 n4-color"
-                            placeholder="Write your Subject"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-12 d-grid gap-2">
-                      <label
-                        for="contact-message"
-                        className="n4-color text-capitalize"
-                      >
-                        message:
-                      </label>
-                      <div className="input-area second cus-border border b-fourth rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                        <div className="input-item w-100">
-                          <textarea
-                            rows="4"
-                            id="contact-message"
-                            placeholder="Your Message"
-                            className="w-100 n4-color"
-                          ></textarea>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6 d-flex">
-                      <button
-                        type="button"
-                        aria-label="Submit Button"
-                        className="box-style style-one rounded-pill n1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12"
-                      >
-                        <span className="fs-eight n4-color transition text-uppercase fw-semibold">
-                          Send Message
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </form>
+              <h1 id="cc-hero-heading" className="cc-hero-title">
+                {BRAND_NAME} — concierge support.
+              </h1>
+              <p className="cc-hero-sub">
+                Parts, orders, sellers, and payments—our specialists route your request with care.
+              </p>
+              <div className="cc-quick-row">
+                <a className="cc-quick-btn" href={`tel:${SUPPORT_PHONE_TEL}`}>
+                  <i className="ph ph-phone" aria-hidden />
+                  {SUPPORT_PHONE_DISPLAY}
+                </a>
+                <Link className="cc-quick-btn" to="/chat">
+                  <i className="ph ph-chats-circle" aria-hidden />
+                  Live chat
+                </Link>
+                <a className="cc-quick-btn" href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                  <i className="ph ph-whatsapp-logo" aria-hidden />
+                  WhatsApp
+                </a>
+                <a className="cc-quick-btn" href={`mailto:${SUPPORT_EMAIL}?subject=Support%20inquiry`}>
+                  <i className="ph ph-envelope-simple" aria-hidden />
+                  Email
+                </a>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      {/* <!-- Contact Section end --> */}
+        </section>
+
+        <section className="cc-split" aria-label="Contact and form">
+          <div className="cc-visual cc-reveal">
+            <div className="cc-ambient" aria-hidden />
+            <img className="cc-visual-img" src={HERO_IMG} alt="" loading="lazy" decoding="async" />
+            <div className="cc-visual-overlay" aria-hidden />
+            <div className="cc-visual-content">
+              <h2>Contact {BRAND_NAME}</h2>
+              <p>
+                Questions about parts listings, orders, or your account—we are here to help.
+              </p>
+              <div className="cc-badges">
+                <span className="cc-badge">Fast replies</span>
+                <span className="cc-badge">Verified marketplace</span>
+                <span className="cc-badge">Secure assistance</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="cc-form" className="cc-glass-card cc-reveal">
+            <h2 className="cc-form-title">Compose your inquiry</h2>
+            <p className="cc-form-hint">All fields help us route you faster.</p>
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="cc-field">
+                <input
+                  id="cc-fullName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder=" "
+                  value={form.fullName}
+                  onChange={(e) => setField("fullName", e.target.value)}
+                  disabled={submitting}
+                />
+                <label htmlFor="cc-fullName">Full name</label>
+              </div>
+              <div className="cc-field">
+                <input
+                  id="cc-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder=" "
+                  value={form.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  disabled={submitting}
+                />
+                <label htmlFor="cc-email">Email address</label>
+              </div>
+              <div className="cc-field">
+                <input
+                  id="cc-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder=" "
+                  value={form.phone}
+                  onChange={(e) => setField("phone", e.target.value)}
+                  disabled={submitting}
+                />
+                <label htmlFor="cc-phone">Phone number</label>
+              </div>
+              <div className="cc-field">
+                <input
+                  id="cc-subject"
+                  type="text"
+                  autoComplete="off"
+                  placeholder=" "
+                  value={form.subject}
+                  onChange={(e) => setField("subject", e.target.value)}
+                  disabled={submitting}
+                />
+                <label htmlFor="cc-subject">Subject</label>
+              </div>
+              <div className="cc-field cc-field--select">
+                <label htmlFor="cc-inquiry">Inquiry type</label>
+                <select
+                  id="cc-inquiry"
+                  value={form.inquiryType}
+                  onChange={(e) => setField("inquiryType", e.target.value)}
+                  disabled={submitting}
+                  aria-label={`Inquiry type${inquiryLabel ? `: ${inquiryLabel}` : ""}`}
+                >
+                  {INQUIRY_TYPES.map((opt) => (
+                    <option key={opt.value || "empty"} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="cc-field">
+                <textarea
+                  id="cc-message"
+                  placeholder=" "
+                  value={form.message}
+                  onChange={(e) => setField("message", e.target.value)}
+                  disabled={submitting}
+                />
+                <label htmlFor="cc-message">Message</label>
+              </div>
+              <button type="submit" className={`cc-submit${submitting ? " cc-skel" : ""}`} disabled={submitting}>
+                {submitting ? "Sending…" : "Send message"}
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <section className="cc-section" aria-labelledby="cc-faq-heading">
+          <div className="cc-section-head cc-reveal">
+            <h2 id="cc-faq-heading">Quick answers</h2>
+            <p>Common questions about the marketplace.</p>
+          </div>
+          <div>
+            {FAQ_ITEMS.map((item, i) => {
+              const open = openFaq === i;
+              return (
+                <div key={item.q} className={`cc-faq-item${open ? " is-open" : ""}`}>
+                  <button
+                    type="button"
+                    className="cc-faq-q"
+                    aria-expanded={open}
+                    onClick={() => setOpenFaq(open ? null : i)}
+                    id={`cc-faq-btn-${i}`}
+                    aria-controls={`cc-faq-panel-${i}`}
+                  >
+                    {item.q}
+                    <i className="ph ph-caret-down" aria-hidden />
+                  </button>
+                  <div className="cc-faq-a" id={`cc-faq-panel-${i}`} role="region" aria-labelledby={`cc-faq-btn-${i}`}>
+                    <div className="cc-faq-a-inner">{item.a}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="cc-section" aria-labelledby="cc-social-heading">
+          <div className="cc-section-head cc-reveal">
+            <h2 id="cc-social-heading">Follow us</h2>
+          </div>
+          <div className="cc-social-grid">
+            {SOCIAL.map((s) => (
+              <a key={s.id} className="cc-social-tile cc-reveal" href={s.href} target="_blank" rel="noopener noreferrer">
+                <i className={`ph ${s.icon}`} aria-hidden />
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="cc-finale" aria-labelledby="cc-finale-heading">
+          <div className="cc-finale-inner">
+            <h2 id="cc-finale-heading">Browse premium parts today</h2>
+            <p>Explore listings or send us a message.</p>
+            <div className="cc-finale-btns">
+              <Link to="/parts">Browse parts</Link>
+              <button type="button" onClick={scrollToForm}>
+                Contact support
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
       <Footer />
+
+      <div className="cc-mobile-sticky" role="navigation" aria-label="Quick support">
+        <button type="button" onClick={scrollToForm}>
+          Message
+        </button>
+        <Link to="/chat">Chat</Link>
+        <a href={`tel:${SUPPORT_PHONE_TEL}`}>Call</a>
+      </div>
     </div>
   );
-};
+}
 
 export default Contact;

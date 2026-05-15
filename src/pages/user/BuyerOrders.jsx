@@ -102,7 +102,7 @@ const BuyerOrders = () => {
   const toAbsUrl = (u) => {
     if (!u) return '/assets/images/handpicked-img-1.webp';
     if (u.startsWith('http') || u.startsWith('data:')) return u;
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${u}`;
+    return `${import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'}${u}`;
   };
 
   // Extract images from HTML description
@@ -195,7 +195,7 @@ const BuyerOrders = () => {
       }
       
       // Make the request directly with fetch to handle FormData properly
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reviews`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'}/api/reviews`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

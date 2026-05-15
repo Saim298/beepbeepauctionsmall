@@ -1,0 +1,10 @@
+/* Space for fixed mobile dock + FAB (matches auctions listing rhythm) */
+.parts-listing-root {
+  padding-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+  .parts-listing-root {
+    padding-bottom: 120px;
+  }
+}

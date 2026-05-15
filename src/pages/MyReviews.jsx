@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiStar, FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiStar, FiTrash2, FiEye } from 'react-icons/fi';
 import StarRating from '../components/StarRating';
 import { DashboardAppChrome, DashboardMenuButton } from '../components/DashboardAppChrome.jsx';
+import { authFetchInit } from '../api/client.js';
 import '../pages/dashboard.css';
 
 const MyReviews = () => {
@@ -14,32 +15,45 @@ const MyReviews = () => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    totalReviews: 0
+    totalReviews: 0,
+    hasPrev: false,
+    hasNext: false,
   });
 
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
   useEffect(() => { localStorage.setItem('beep-theme', theme); }, [theme]);
 
   const fetchMyReviews = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiBase}/api/reviews/my-reviews?page=${page}&limit=10`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      setError('');
+      const response = await fetch(`${apiBase}/api/reviews/my-reviews?page=${page}&limit=10`, authFetchInit());
+
+      if (response.status === 401) {
+        navigate('/signin?redirect=%2Fuser%2Freviews');
+        return;
+      }
 
       if (response.ok) {
-        const data = await response.json();
-        setReviews(data.reviews);
-        setPagination(data.pagination);
-      } else {
-        setError('Failed to load reviews');
+        const data = await response.json().catch(() => ({}));
+        setReviews(Array.isArray(data.reviews) ? data.reviews : []);
+        const p = data.pagination || {};
+        setPagination({
+          currentPage: p.currentPage ?? page,
+          totalPages: p.totalPages ?? 1,
+          totalReviews: p.totalReviews ?? 0,
+          hasPrev: Boolean(p.hasPrev),
+          hasNext: Boolean(p.hasNext),
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      setError('Failed to load reviews');
+
+      const errBody = await response.json().catch(() => ({}));
+      setError(errBody.error || errBody.message || `Failed to load reviews (${response.status})`);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setError(err?.message || 'Failed to load reviews');
     } finally {
       setLoading(false);
     }
@@ -55,12 +69,7 @@ const MyReviews = () => {
     }
 
     try {
-      const response = await fetch(`${apiBase}/api/reviews/${reviewId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      const response = await fetch(`${apiBase}/api/reviews/${reviewId}`, authFetchInit({ method: 'DELETE' }));
 
       if (response.ok) {
         setReviews(prev => prev.filter(review => review._id !== reviewId));
@@ -124,13 +133,20 @@ const MyReviews = () => {
             </div>
           </header>
 
-          {error && (
+          {error && reviews.length > 0 && (
             <div className="panel glass" style={{ padding: 16, marginBottom: 16, background: 'var(--red-500)', color: 'white' }}>
               {error}
             </div>
           )}
 
-          {reviews.length === 0 ? (
+          {error && reviews.length === 0 ? (
+            <section className="panel glass" style={{ padding: 24, textAlign: 'center' }}>
+              <p style={{ margin: '0 0 16px' }}>{error}</p>
+              <button type="button" className="pill primary" onClick={() => fetchMyReviews(1)}>
+                Try again
+              </button>
+            </section>
+          ) : reviews.length === 0 ? (
             <section className="panel glass" style={{ padding: 24, textAlign: 'center' }}>
               <div style={{ display: 'grid', justifyItems: 'center', gap: 12 }}>
                 <div style={{ width: 120, height: 90, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--glass-300)' }}>
@@ -147,34 +163,41 @@ const MyReviews = () => {
             <>
               {/* Reviews List */}
               <div style={{ display: 'grid', gap: '16px' }}>
-                {reviews.map((review) => (
+                {reviews.map((review) => {
+                  const part = review.sparePart;
+                  const partId = part?._id;
+                  const partName = part?.name || 'Part (removed)';
+                  const partPrice = part?.price;
+                  return (
                   <div key={review._id}>
                     <div className="panel glass" style={{ padding: 16 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '16px', alignItems: 'start' }}>
                         {/* Part Image and Info */}
                         <div style={{ display: 'flex', gap: 12 }}>
                           <div 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => navigate(`/parts/${review.sparePart._id}`)}
+                            style={{ cursor: partId ? 'pointer' : 'default' }}
+                            onClick={() => partId && navigate(`/parts/${partId}`)}
                           >
                             <img
-                              src={review.sparePart.media?.[0]?.url 
-                                ? toAbsUrl(review.sparePart.media[0].url) 
+                              src={part?.media?.[0]?.url 
+                                ? toAbsUrl(part.media[0].url) 
                                 : "/assets/images/handpicked-img-1.webp"}
-                              alt={review.sparePart.name}
+                              alt={partName}
                               style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: 8 }}
                             />
                           </div>
                           <div>
                             <h6 
-                              style={{ fontWeight: 'bold', margin: '0 0 4px 0', cursor: 'pointer' }}
-                              onClick={() => navigate(`/parts/${review.sparePart._id}`)}
+                              style={{ fontWeight: 'bold', margin: '0 0 4px 0', cursor: partId ? 'pointer' : 'default' }}
+                              onClick={() => partId && navigate(`/parts/${partId}`)}
                             >
-                              {review.sparePart.name}
+                              {partName}
                             </h6>
+                            {partPrice != null && (
                             <p className="muted" style={{ margin: '0 0 4px 0', fontSize: '14px' }}>
-                              ${review.sparePart.price}
+                              ${partPrice}
                             </p>
+                            )}
                             {review.verifiedPurchase && (
                               <span className="pill" style={{ background: 'var(--green-500)', color: 'white', fontSize: '12px' }}>
                                 ✓ Verified Purchase
@@ -198,9 +221,9 @@ const MyReviews = () => {
                           </div>
 
                           <p className="muted" style={{ margin: '0 0 8px 0' }}>
-                            {review.comment.length > 150 
-                              ? `${review.comment.substring(0, 150)}...` 
-                              : review.comment}
+                            {(review.comment || '').length > 150 
+                              ? `${(review.comment || '').substring(0, 150)}...` 
+                              : (review.comment || '')}
                           </p>
 
                           {/* Detailed Ratings */}
@@ -243,10 +266,11 @@ const MyReviews = () => {
                         {/* Actions */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                           <button
-                            onClick={() => navigate(`/parts/${review.sparePart._id}`)}
+                            onClick={() => partId && navigate(`/parts/${partId}`)}
                             className="pill"
                             style={{ fontSize: '12px', padding: '6px 12px' }}
                             title="View Part"
+                            disabled={!partId}
                           >
                             <FiEye style={{ marginRight: 4 }} />
                             View
@@ -299,7 +323,8 @@ const MyReviews = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination */}

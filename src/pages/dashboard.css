@@ -66,6 +66,7 @@
 .nav-item .icon{ display: inline-grid; place-items: center; color: var(--muted); }
 
 .sidebar-footer{ display: grid; gap: 6px; margin-top: auto; }
+.sidebar-notify-slot{ display: flex; justify-content: flex-start; padding: 0 4px 4px; }
 .sidebar-footer a, .sidebar-footer button{
   display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px;
   padding: 10px 12px; border-radius: 10px; background: var(--glass-100);

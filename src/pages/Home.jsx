@@ -6,6 +6,8 @@ import Footer from "../components/frontComponents/Footer";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../api/client";
 import { MobileBottomBarHome } from "../components/MobileBottomBar";
+import MobileHome from "./MobileHome";
+import { BRAND_NAME, BRAND_NAME_SHORT } from "../constants/brand.js";
 
 const Home = () => {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -44,7 +46,12 @@ const Home = () => {
   };
 
   return (
-    <div className="mobile-hide-header">
+    <>
+      <div className="d-block d-md-none">
+        <MobileHome />
+      </div>
+
+      <div className="d-none d-md-block mobile-hide-header">
       <Header />
       <MobileBottomBarHome />
 
@@ -1529,7 +1536,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1581,7 +1588,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1633,7 +1640,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1685,7 +1692,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1737,7 +1744,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1789,7 +1796,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1841,7 +1848,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1895,7 +1902,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1947,7 +1954,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -1999,7 +2006,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -2051,7 +2058,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -2103,7 +2110,7 @@ const Home = () => {
                       </li>
                     </ul>
                     <p className="fs-five fw-normal n4-color">
-                      Affordable deals and excellent customer support made Beep Beep Auctions my go-to auction platform!
+                      Affordable deals and excellent customer support made {BRAND_NAME} my go-to auction platform!
                     </p>
                     <div className="d-center gap-3 gap-md-4 mt-3 mt-md-5">
                       <div className="img-area box-area box-six d-center position-relative">
@@ -2135,7 +2142,7 @@ const Home = () => {
       <section className="cars-auction position-relative px-0 px-md-10 pb-120 mt-4">
         <div className="abs-area position-absolute top-0 end-0 pe-none mt-20">
           <span className="text-uppercase text-gradient display-two p1-color mb-n20">
-            Beep
+            {BRAND_NAME_SHORT}
           </span>
         </div>
         <div className="container-fluid cus-padding">
@@ -2272,7 +2279,7 @@ const Home = () => {
                   <h2 className="fs-two text-uppercase fw-bolder n4-color mb-4">
                     GET DAILY UPDATES FROM
                     <br />
-                    <span className="p1-color">Beep Beep</span>
+                    <span className="p1-color">{BRAND_NAME_SHORT}</span>
                   </h2>
 
                   {/* Description */}
@@ -2379,6 +2386,7 @@ const Home = () => {
       <div className="d-block d-lg-none" style={{ height: "80px" }} />
       <Footer />
     </div>
+    </>
   );
 };
 

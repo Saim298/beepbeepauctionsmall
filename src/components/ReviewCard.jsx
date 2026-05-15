@@ -1,49 +1,53 @@
-import React, { useState } from 'react';
-import StarRating from './StarRating';
-import { getAuthToken } from '../api/client.js';
+import React, { useState } from "react";
+import StarRating from "./StarRating";
+import { getAuthToken } from "../api/client.js";
+import "./reviews-ui.css";
+
+const API_BASE = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
 const authHeaders = () => {
   const token = getAuthToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, currentUser = null }) => {
   const [showFullComment, setShowFullComment] = useState(false);
-  const [responseText, setResponseText] = useState('');
+  const [responseText, setResponseText] = useState("");
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const comment = review.comment || "";
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const handleHelpfulVote = async (helpful) => {
     if (!currentUser) {
-      alert('Please login to vote on reviews');
+      alert("Please login to vote on reviews");
       return;
     }
 
     try {
-      const response = await fetch(`/api/reviews/${review._id}/vote`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/api/reviews/${review._id}/vote`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
+          "Content-Type": "application/json",
+          ...authHeaders(),
         },
-        body: JSON.stringify({ helpful })
+        body: JSON.stringify({ helpful }),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         onHelpfulVote(review._id, result.helpfulCount, result.notHelpfulCount);
       }
     } catch (error) {
-      console.error('Error voting on review:', error);
+      console.error("Error voting on review:", error);
     }
   };
 
@@ -52,64 +56,52 @@ const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, 
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/reviews/${review._id}/response`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/api/reviews/${review._id}/response`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders()
+          "Content-Type": "application/json",
+          ...authHeaders(),
         },
-        body: JSON.stringify({ message: responseText })
+        body: JSON.stringify({ message: responseText }),
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         onSellerResponse(review._id, result.response);
         setShowResponseForm(false);
-        setResponseText('');
+        setResponseText("");
       }
     } catch (error) {
-      console.error('Error submitting seller response:', error);
+      console.error("Error submitting seller response:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const shouldTruncateComment = review.comment.length > 300;
-  const displayComment = shouldTruncateComment && !showFullComment 
-    ? review.comment.substring(0, 300) + '...' 
-    : review.comment;
+  const shouldTruncateComment = comment.length > 300;
+  const displayComment =
+    shouldTruncateComment && !showFullComment ? comment.substring(0, 300) + "..." : comment;
 
   return (
-    <div className="bg-white border rounded-lg p-6 mb-4">
-      {/* Review Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+    <div className="review-card">
+      <div className="review-card__header">
+        <div className="review-card__user">
+          <div className="review-card__avatar">
             {review.reviewer?.avatarUrl ? (
-              <img 
-                src={review.reviewer.avatarUrl} 
-                alt={review.reviewer.username}
-                className="w-full h-full object-cover"
-              />
+              <img src={review.reviewer.avatarUrl} alt={review.reviewer.username || ""} />
             ) : (
-              <span className="text-gray-600 font-medium">
-                {review.reviewer?.username?.charAt(0).toUpperCase()}
-              </span>
+              <span>{review.reviewer?.username?.charAt(0).toUpperCase()}</span>
             )}
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h4 className="font-medium text-gray-900">
-                {review.reviewer?.username}
-              </h4>
+            <div>
+              <span className="review-card__name">{review.reviewer?.username}</span>
               {review.verifiedPurchase && (
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                  ✓ Verified Purchase
-                </span>
+                <span className="review-card__verified">✓ Verified Purchase</span>
               )}
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="review-card__meta">
               {formatDate(review.createdAt)}
               {review.reviewer?.location && ` • ${review.reviewer.location}`}
             </p>
@@ -118,155 +110,109 @@ const ReviewCard = ({ review, onHelpfulVote, onSellerResponse, isOwner = false, 
         <StarRating rating={review.rating} size="sm" />
       </div>
 
-      {/* Review Title */}
-      <h3 className="font-semibold text-gray-900 mb-2">
-        {review.title}
-      </h3>
+      <h3 className="review-card__title">{review.title}</h3>
 
-      {/* Detailed Ratings */}
       {(review.qualityRating || review.shippingRating || review.valueRating) && (
-        <div className="flex flex-wrap gap-4 mb-3 text-sm">
-          {review.qualityRating && (
-            <div className="flex items-center space-x-1">
-              <span className="text-gray-600">Quality:</span>
+        <div className="review-card__detail-row">
+          {review.qualityRating ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span>Quality:</span>
               <StarRating rating={review.qualityRating} size="sm" />
             </div>
-          )}
-          {review.shippingRating && (
-            <div className="flex items-center space-x-1">
-              <span className="text-gray-600">Shipping:</span>
+          ) : null}
+          {review.shippingRating ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span>Shipping:</span>
               <StarRating rating={review.shippingRating} size="sm" />
             </div>
-          )}
-          {review.valueRating && (
-            <div className="flex items-center space-x-1">
-              <span className="text-gray-600">Value:</span>
+          ) : null}
+          {review.valueRating ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span>Value:</span>
               <StarRating rating={review.valueRating} size="sm" />
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
-      {/* Review Comment */}
-      <div className="mb-4">
-        <p className="text-gray-700 leading-relaxed">
-          {displayComment}
-        </p>
+      <div>
+        <p className="review-card__comment">{displayComment}</p>
         {shouldTruncateComment && (
           <button
+            type="button"
+            className="review-card__link"
             onClick={() => setShowFullComment(!showFullComment)}
-            className="text-blue-600 hover:text-blue-800 text-sm mt-1"
           >
-            {showFullComment ? 'Show less' : 'Read more'}
+            {showFullComment ? "Show less" : "Read more"}
           </button>
         )}
       </div>
 
-      {/* Review Images */}
       {review.images && review.images.length > 0 && (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2">
-            {review.images.map((image, index) => (
-              <div key={index} className="w-20 h-20 rounded-lg overflow-hidden">
-                <img
-                  src={image.url}
-                  alt={image.caption || `Review image ${index + 1}`}
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-80"
-                  onClick={() => {
-                    // TODO: Implement image modal/lightbox
-                    window.open(image.url, '_blank');
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+        <div className="review-card__images">
+          {review.images.map((image, index) => (
+            <div key={index} className="review-card__img-wrap">
+              <img
+                src={image.url}
+                alt={image.caption || `Review image ${index + 1}`}
+                onClick={() => window.open(image.url, "_blank")}
+              />
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Seller Response */}
       {review.sellerResponse && (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-          <div className="flex items-start space-x-2">
-            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">S</span>
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-blue-900 text-sm">
-                Response from {review.seller?.username}
-              </p>
-              <p className="text-blue-800 mt-1">
-                {review.sellerResponse.message}
-              </p>
-              <p className="text-blue-600 text-xs mt-2">
-                {formatDate(review.sellerResponse.respondedAt)}
-              </p>
-            </div>
-          </div>
+        <div className="review-card__seller-reply">
+          <strong>Response from {review.seller?.username}</strong>
+          <p>{review.sellerResponse.message}</p>
+          <div className="review-card__seller-date">{formatDate(review.sellerResponse.respondedAt)}</div>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between pt-4 border-t">
-        <div className="flex items-center space-x-4">
-          {/* Helpful Votes */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Was this helpful?</span>
-            <button
-              onClick={() => handleHelpfulVote(true)}
-              className="text-sm text-gray-600 hover:text-green-600 flex items-center space-x-1"
-            >
-              <span>👍</span>
-              <span>{review.helpfulCount || 0}</span>
-            </button>
-            <button
-              onClick={() => handleHelpfulVote(false)}
-              className="text-sm text-gray-600 hover:text-red-600 flex items-center space-x-1"
-            >
-              <span>👎</span>
-              <span>{review.notHelpfulCount || 0}</span>
-            </button>
-          </div>
+      <div className="review-card__actions">
+        <div className="review-card__helpful">
+          <span>Was this helpful?</span>
+          <button type="button" className="review-card__vote" onClick={() => handleHelpfulVote(true)}>
+            <span>👍</span> {review.helpfulCount || 0}
+          </button>
+          <button type="button" className="review-card__vote" onClick={() => handleHelpfulVote(false)}>
+            <span>👎</span> {review.notHelpfulCount || 0}
+          </button>
         </div>
 
-        {/* Seller Response Button */}
         {isOwner && !review.sellerResponse && (
-          <button
-            onClick={() => setShowResponseForm(!showResponseForm)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <button type="button" className="review-card__respond" onClick={() => setShowResponseForm(!showResponseForm)}>
             Respond
           </button>
         )}
       </div>
 
-      {/* Seller Response Form */}
       {showResponseForm && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="review-card__reply-form">
           <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="3"
+            className="review-card__textarea"
+            rows={3}
             placeholder="Respond to this review..."
             value={responseText}
             onChange={(e) => setResponseText(e.target.value)}
             maxLength={500}
           />
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-gray-500">{responseText.length}/500</span>
-            <div className="space-x-2">
-              <button
-                onClick={() => setShowResponseForm(false)}
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSellerResponse}
-                disabled={loading || !responseText.trim()}
-                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Posting...' : 'Post Response'}
-              </button>
-            </div>
+          <div className="review-card__reply-actions">
+            <span style={{ marginRight: "auto", fontSize: 12, color: "var(--text-muted, rgba(255,255,255,0.35))" }}>
+              {responseText.length}/500
+            </span>
+            <button type="button" className="review-card__btn-ghost" onClick={() => setShowResponseForm(false)}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="review-card__btn-submit"
+              onClick={handleSellerResponse}
+              disabled={loading || !responseText.trim()}
+            >
+              {loading ? "Posting…" : "Post Response"}
+            </button>
           </div>
         </div>
       )}

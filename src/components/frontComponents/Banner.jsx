@@ -1,5 +1,6 @@
 import React from 'react'
 import BeepVintageVideo from '../../assets/Videos/Beep Vintage Car.mp4'
+import { BRAND_NAME_SHORT } from '../../constants/brand.js'
 
 const Banner = () => {
   return (
@@ -87,7 +88,7 @@ const Banner = () => {
                     className="text-white text-decoration-underline"
                     style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
                   >
-                    Join Beepbeep Community
+                    Join {BRAND_NAME_SHORT} Community
                   </a>
                   {/* Join Beepbeep Community */}
                 </span>

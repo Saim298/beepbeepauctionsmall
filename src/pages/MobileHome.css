@@ -1,0 +1,551 @@
+/* Copied from beep-auction MobileHome — same layout tokens for market-place mobile home */
+
+.mobile-home-container {
+  background-color: #000000;
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: 90px;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.mh-hero-section {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 40px 20px 100px 20px;
+}
+
+.mh-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.mh-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,1) 100%);
+  z-index: 1;
+}
+
+.mh-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mh-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(215, 0, 7, 0.2);
+  border: 1px solid rgba(215, 0, 7, 0.5);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 30px;
+  width: fit-content;
+  animation: mh-pulse 2s infinite;
+}
+
+.mh-live-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #D70007;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #D70007;
+}
+
+.mh-live-text {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mh-hero-title {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0;
+  color: #ffffff;
+}
+
+.mh-hero-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.mh-hero-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.mh-btn-primary {
+  flex: 1;
+  background-color: #D70007;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 18px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(215, 0, 7, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.mh-btn-primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 5px 15px rgba(215, 0, 7, 0.4);
+}
+
+.mh-btn-secondary {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 18px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+
+.mh-btn-secondary:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mh-stats-section {
+  padding: 10px 0 30px 20px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 10;
+}
+
+.mh-stats-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-right: 20px;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+}
+
+.mh-stat-card {
+  flex: 0 0 auto;
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 20px;
+  padding: 16px 24px;
+  min-width: 140px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mh-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.mh-stat-label {
+  font-size: 12px;
+  color: #888888;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.mh-section {
+  padding: 30px 0 30px 20px;
+}
+
+.mh-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 20px;
+  margin-bottom: 20px;
+}
+
+.mh-section-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.mh-section-link {
+  color: #D70007;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mh-cars-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-right: 20px;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+}
+
+.mh-car-card {
+  flex: 0 0 280px;
+  background: #111111;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #222222;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.mh-car-image-container {
+  position: relative;
+  height: 180px;
+  width: 100%;
+}
+
+.mh-car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mh-car-badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.mh-badge-live {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mh-badge-live .dot {
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e;
+  border-radius: 50%;
+}
+
+.mh-btn-fav {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mh-car-info {
+  padding: 16px;
+}
+
+.mh-car-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mh-car-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #222222;
+}
+
+.mh-car-price-label {
+  font-size: 12px;
+  color: #888888;
+  margin-bottom: 4px;
+}
+
+.mh-car-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #D70007;
+}
+
+.mh-car-specs {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+}
+
+.mh-spec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #888888;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mh-categories-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 0 20px 20px 20px;
+  scroll-snap-type: x mandatory;
+}
+
+.mh-category-card {
+  flex: 0 0 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  scroll-snap-align: start;
+}
+
+.mh-category-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 24px;
+  background: #111111;
+  border: 1px solid #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #ffffff;
+  transition: all 0.2s;
+}
+
+.mh-category-card.active .mh-category-icon {
+  background: rgba(215, 0, 7, 0.1);
+  border-color: #D70007;
+  color: #D70007;
+}
+
+.mh-category-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888888;
+}
+
+.mh-category-card.active .mh-category-name {
+  color: #ffffff;
+}
+
+.mh-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.mh-feature-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.mh-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(215, 0, 7, 0.1);
+  color: #D70007;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.mh-feature-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.mh-testimonials-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 0 20px 20px 20px;
+  scroll-snap-type: x mandatory;
+}
+
+.mh-testimonial-card {
+  flex: 0 0 300px;
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 24px;
+  padding: 24px;
+  scroll-snap-align: start;
+}
+
+.mh-stars {
+  color: #FFB800;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 4px;
+}
+
+.mh-review-text {
+  font-size: 15px;
+  color: #dddddd;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.mh-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mh-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mh-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.mh-user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mh-user-car {
+  font-size: 12px;
+  color: #888888;
+}
+
+.mh-final-cta {
+  margin: 20px 20px 40px 20px;
+  background: linear-gradient(135deg, rgba(215, 0, 7, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 1px solid rgba(215, 0, 7, 0.3);
+  border-radius: 30px;
+  padding: 40px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mh-cta-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  background: #D70007;
+  filter: blur(80px);
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.mh-cta-content {
+  position: relative;
+  z-index: 1;
+}
+
+.mh-cta-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.mh-cta-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 30px;
+}
+
+.mh-cta-btn {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 100px;
+  padding: 20px 40px;
+  font-size: 18px;
+  font-weight: 800;
+  width: 100%;
+}
+
+@keyframes mh-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(215, 0, 7, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(215, 0, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(215, 0, 7, 0);
+  }
+}

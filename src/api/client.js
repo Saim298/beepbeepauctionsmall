@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
 
 export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -42,20 +42,48 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   return data;
 }
 
-export function saveAuthToken(token) {
-  if (token) {
-    localStorage.setItem('auth_token', token);
+const AUTH_KEY = 'auth_token';
+
+export function saveAuthToken(token, { persistent = true } = {}) {
+  if (!token) return;
+  try {
+    if (persistent) {
+      localStorage.setItem(AUTH_KEY, token);
+      sessionStorage.removeItem(AUTH_KEY);
+    } else {
+      sessionStorage.setItem(AUTH_KEY, token);
+      localStorage.removeItem(AUTH_KEY);
+    }
     window.dispatchEvent(new Event('auth-token-changed'));
-  }
+  } catch (_) {}
 }
 
 export function getAuthToken() {
-  return localStorage.getItem('auth_token');
+  try {
+    return localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
+  } catch (_) {
+    return null;
+  }
 }
 
 export function clearAuthToken() {
-  localStorage.removeItem('auth_token');
-  window.dispatchEvent(new Event('auth-token-changed'));
+  try {
+    localStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(AUTH_KEY);
+    window.dispatchEvent(new Event('auth-token-changed'));
+  } catch (_) {}
+}
+
+/** Bearer from storage + cookies for protected routes (matches apiRequest behavior). */
+export function authFetchInit(init = {}) {
+  const token = getAuthToken();
+  const headers = { ...(init.headers || {}) };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return {
+    ...init,
+    headers,
+    credentials: init.credentials ?? 'include'
+  };
 }
 
 // Try to sync token from URL on app boot (OAuth flows)

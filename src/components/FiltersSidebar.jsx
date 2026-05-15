@@ -1,6 +1,16 @@
 import React from "react";
 
-const FiltersSidebar = ({ q, setQ, filters, setFilters, brands, categories, activeFilterCount }) => {
+const FiltersSidebar = ({
+  q,
+  setQ,
+  filters,
+  setFilters,
+  brands,
+  categories,
+  activeFilterCount,
+  luxury = false,
+  hideSearch = false,
+}) => {
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
@@ -12,7 +22,7 @@ const FiltersSidebar = ({ q, setQ, filters, setFilters, brands, categories, acti
       category: "",
       condition: "",
       priceRange: "",
-      compatibility: ""
+      compatibility: "",
     });
   };
 
@@ -35,6 +45,114 @@ const FiltersSidebar = ({ q, setQ, filters, setFilters, brands, categories, acti
     { value: "500-1000", label: "$500 - $1,000" },
     { value: "1000-", label: "Over $1,000" }
   ];
+
+  if (luxury) {
+    return (
+      <>
+        {!hideSearch && (
+          <div className="lux-filter-group">
+            <div className="lux-filter-label">Search</div>
+            <input
+              type="text"
+              className="lux-input"
+              placeholder="Search parts, brands..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+          </div>
+        )}
+
+        <div className="lux-filter-group">
+          <div className="lux-filter-label">Brand</div>
+          <select
+            className="lux-select"
+            value={filters.brand}
+            onChange={(e) => handleFilterChange("brand", e.target.value)}
+          >
+            <option value="">All Brands</option>
+            {brands.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lux-filter-group">
+          <div className="lux-filter-label">Category</div>
+          <select
+            className="lux-select"
+            value={filters.category}
+            onChange={(e) => handleFilterChange("category", e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {typeof category === "string"
+                  ? category.replace(/_/g, " ")
+                  : category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lux-filter-group">
+          <div className="lux-filter-label">Condition</div>
+          <select
+            className="lux-select"
+            value={filters.condition}
+            onChange={(e) => handleFilterChange("condition", e.target.value)}
+          >
+            {conditionOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lux-filter-group">
+          <div className="lux-filter-label">Price range</div>
+          <select
+            className="lux-select"
+            value={filters.priceRange}
+            onChange={(e) => handleFilterChange("priceRange", e.target.value)}
+          >
+            {priceRanges.map((range) => (
+              <option key={range.value} value={range.value}>
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="lux-filter-group">
+          <div className="lux-filter-label">Compatibility</div>
+          <input
+            type="text"
+            className="lux-input"
+            placeholder="e.g. BMW, Toyota..."
+            value={filters.compatibility}
+            onChange={(e) =>
+              handleFilterChange("compatibility", e.target.value)
+            }
+          />
+        </div>
+
+        <div className="lux-filter-group" style={{ marginBottom: 0 }}>
+          <button
+            type="button"
+            className="lux-btn-secondary"
+            style={{ width: "100%" }}
+            onClick={clearFilters}
+            disabled={activeFilterCount === 0}
+          >
+            Clear all filters
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="filters-sidebar bg-white border rounded-0 p-0 h-100" style={{ borderColor: '#e0e0e0' }}>

@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { DashboardAppChrome, DashboardMenuButton } from "../components/DashboardAppChrome.jsx";
 import { apiRequest, getAuthToken } from "../api/client";
+import { useNotify } from "../context/NotificationContext.jsx";
+import {
+  registerWebPush,
+  unregisterWebPush,
+  isPushSubscribed,
+} from "../utils/pushRegistration.js";
 import "../pages/dashboard.css";
 
 const Settings = () => {
@@ -16,7 +22,11 @@ const Settings = () => {
   const [mfaQR, setMfaQR] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const fileInput = useRef(null);
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
+  const { notify } = useNotify();
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushServerOk, setPushServerOk] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +49,21 @@ const Settings = () => {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/api/notifications/push/vapid-public`);
+        const j = await r.json().catch(() => ({}));
+        setPushServerOk(!!j.configured);
+        if (getAuthToken()) {
+          setPushSubscribed(await isPushSubscribed());
+        }
+      } catch {
+        setPushServerOk(false);
+      }
+    })();
+  }, [apiBase]);
 
   const save = async (e) => {
     e.preventDefault();
@@ -78,6 +103,48 @@ const Settings = () => {
       setError(e.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const enableBrowserPush = async () => {
+    try {
+      setPushBusy(true);
+      await registerWebPush();
+      setPushSubscribed(true);
+      notify({
+        title: "Browser notifications on",
+        message: "You will get alerts for bids, messages, and auction results.",
+        severity: "success",
+      });
+    } catch (err) {
+      notify({
+        title: "Could not enable notifications",
+        message: err?.message || "Try again or use another browser.",
+        severity: "error",
+      });
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
+  const disableBrowserPush = async () => {
+    try {
+      setPushBusy(true);
+      await unregisterWebPush();
+      setPushSubscribed(false);
+      notify({
+        title: "Browser notifications off",
+        message: "Push subscription removed from this device.",
+        severity: "info",
+      });
+    } catch (err) {
+      notify({
+        title: "Disable failed",
+        message: err?.message || "Try again.",
+        severity: "error",
+      });
+    } finally {
+      setPushBusy(false);
     }
   };
 
@@ -276,6 +343,54 @@ const Settings = () => {
                         <button className="pill">Verify</button>
                       </div>
                     </form>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="panel glass">
+              <div className="panel-header space-between">
+                <h3>Notifications</h3>
+                {pushSubscribed ? (
+                  <span className="badge soft" style={{ color: "var(--success-500)" }}>
+                    Push on
+                  </span>
+                ) : (
+                  <span className="badge soft" style={{ color: "var(--muted)" }}>
+                    Push off
+                  </span>
+                )}
+              </div>
+              <div className="panel-body">
+                <p style={{ color: "var(--muted)", marginTop: 0, lineHeight: 1.5 }}>
+                  In-app toasts appear while you use the site. Enable{" "}
+                  <strong>browser push</strong> for alerts when the tab is closed (permission required).
+                </p>
+                {!pushServerOk ? (
+                  <p style={{ color: "var(--muted)", fontSize: 14 }}>
+                    Push requires server <code>VAPID_PUBLIC_KEY</code> and <code>VAPID_PRIVATE_KEY</code>.
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+                    {!pushSubscribed ? (
+                      <button
+                        type="button"
+                        className="pill primary"
+                        disabled={pushBusy || !getAuthToken()}
+                        onClick={enableBrowserPush}
+                      >
+                        {pushBusy ? "Working…" : "Enable browser push"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="pill"
+                        disabled={pushBusy}
+                        onClick={disableBrowserPush}
+                      >
+                        {pushBusy ? "Working…" : "Disable browser push on this device"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,194 +1,152 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { apiRequest, saveAuthToken } from "../api/client";
-import logo from "../image/logo.png"
-import { MobileBottomBarAuth } from "../components/MobileBottomBar";
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { apiRequest, saveAuthToken } from '../api/client';
+import logo from '../image/logo.png';
+import { MobileBottomBarAuth } from '../components/MobileBottomBar';
+import LuxuryAuthShell from '../components/auth/LuxuryAuthShell';
+import GlassTextField from '../components/auth/GlassTextField';
+import PasswordField from '../components/auth/PasswordField';
+import PasswordStrength from '../components/auth/PasswordStrength';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons';
+import AccountTypeToggle from '../components/auth/AccountTypeToggle';
+import '../styles/authPremium.css';
+
+const disposableEmailDomains = [
+  'guerrillamail.com',
+  'mailinator.com',
+  '10minutemail.com',
+  'tempmail.org',
+  'temp-mail.org',
+  'yopmail.com',
+  'throwaway.email',
+  'maildrop.cc'
+];
+
+function postLoginPath(searchParams) {
+  const raw = searchParams.get('redirect') || searchParams.get('returnUrl') || '';
+  if (!raw || typeof raw !== 'string') return '/dashboard';
+  const t = raw.trim();
+  if (!t.startsWith('/') || t.startsWith('//')) return '/dashboard';
+  return t;
+}
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("individual");
-  const [error, setError] = useState("");
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const [searchParams] = useSearchParams();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('buyer');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
+
+  const createOAuthUrl = (provider) => {
+    const clientUrl = window.location.origin;
+    const state = btoa(JSON.stringify({ clientUrl }));
+    return `${apiBase}/api/auth/${provider}?state=${encodeURIComponent(state)}`;
+  };
+
+  const confirmError = useMemo(() => {
+    if (!confirmPassword || !password) return '';
+    if (confirmPassword !== password) return 'Passwords do not match';
+    return '';
+  }, [password, confirmPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    
-    // Check if email looks disposable before submitting
-    const disposableEmailDomains = [
-      'guerrillamail.com', 'mailinator.com', '10minutemail.com', 'tempmail.org',
-      'temp-mail.org', 'yopmail.com', 'throwaway.email', 'maildrop.cc'
-    ];
-    
-    const emailDomain = email.toLowerCase().split('@')[1];
-    if (emailDomain && disposableEmailDomains.includes(emailDomain)) {
-      setError("Invalid email. Please use a permanent email address instead of a disposable one.");
+    setError('');
+    if (!acceptedTerms) {
+      setError('Please accept the Terms & Conditions and Privacy Policy.');
       return;
     }
-    
+    if (confirmPassword !== password) {
+      setError('Passwords must match.');
+      return;
+    }
+    const emailDomain = email.toLowerCase().split('@')[1];
+    if (emailDomain && disposableEmailDomains.includes(emailDomain)) {
+      setError('Please use a permanent email address.');
+      return;
+    }
+    setSubmitting(true);
     try {
-      const data = await apiRequest("/api/auth/signup", {
-        method: "POST",
-        body: { name, email, password, role },
+      const body = { name, email, password, role };
+      if (phone.trim()) body.phone = phone.trim();
+      const data = await apiRequest('/api/auth/signup', {
+        method: 'POST',
+        body
       });
       saveAuthToken(data.token);
-      navigate("/dashboard");
+      navigate(postLoginPath(searchParams));
     } catch (err) {
-      // Handle specific disposable email error from backend
-      if (err.message.includes('Disposable email') || err.message.includes('disposable')) {
-        setError("Invalid email. Please use a permanent email address instead of a disposable one.");
+      if (err.message.includes('Disposable') || err.message.includes('disposable')) {
+        setError('Please use a permanent email address.');
       } else {
-        setError(err.message);
+        setError(err.message || 'Sign up failed');
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <div>
       <MobileBottomBarAuth page="signup" />
-      {/* <!-- Authentication start--> */}
-      <section class="authentication banner-section mx-2 mx-md-4 mx-xl-6 my-2 my-md-4 my-xl-6">
-        <div class="container-fluid d-block d-lg-grid px-3 px-xl-0 position-relative">
-          <div class="row g-9 g-lg-0 align-items-center justify-content-center">
-            <div class="col-md-7 col-xl-6 h-100">
-              <div class="row justify-content-center h-100">
-                <div class="col-xl-11 col-xxl-9 py-4 pe-2 pe-lg-10">
-                  <div class="d-flex flex-column justify-content-between gap-4 gap-md-6 h-100">
-                    <div class="logo-area">
-                    <Link to="/"
-                        class="nav-brand align-items-center gap-2"
-                      >
-                        <img src={logo} alt="logo" style={{width: "100px"}} />
-                      </Link>
-                    </div>
-                    <div class="mid-area py-10 d-grid gap-6 gap-md-10">
-                      <div class="head-area d-grid gap-3 gap-md-5">
-                        <h2 class="n4-color">Let’s Get Started!</h2>
-                      </div>
-                      <form onSubmit={handleSubmit}>
-                        <div class="row gy-6 gy-md-10">
-                          <div class="col-md-12 d-grid gap-2">
-                            <label
-                              for="auth-name"
-                              class="n4-color text-capitalize"
-                            >
-                              Enter Your Name
-                            </label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="text" id="auth-name" class="w-100 n4-color" placeholder="Write your Name" value={name} onChange={(e)=>setName(e.target.value)} />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-12 d-grid gap-2">
-                            <label
-                              for="auth-email"
-                              class="n4-color text-capitalize"
-                            >
-                              Enter Your Email ID
-                            </label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="email" id="auth-email" class="w-100 n4-color" placeholder="Write your Email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-12 d-grid gap-2">
-                            <label
-                              for="auth-password"
-                              class="n4-color text-capitalize"
-                            >
-                              Enter Your Password
-                            </label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <input type="password" id="auth-password" class="w-100 n4-color" placeholder="Write your Password" value={password} onChange={(e)=>setPassword(e.target.value)} required />
-                              </div>
-                            </div>
-                          </div>
-                          <div class="col-md-12 d-grid gap-2">
-                            <label class="n4-color text-capitalize">Select Role</label>
-                            <div class="input-area second n4-3rd-bg-color rounded-4 d-center gap-2 transition px-5 px-md-8 py-3 py-lg-5">
-                              <div class="input-item w-100">
-                                <select class="w-100 n4-color rounded-3" style={{ padding: '10px 12px', background: 'transparent', border: '1px solid var(--glass-300)' }} value={role} onChange={(e)=>setRole(e.target.value)}>
-                                  <option value="dealer">Dealer</option>
-                                  <option value="individual">Individual Seller</option>
-                                  <option value="vendor">Vendor Marketplace Seller</option>
-                                </select>
-                              </div>
-                              </div>
-                            </div>
-                          <div class="col-md-6 d-flex">
-                            <button
-                              type="submit"
-                              aria-label="Submit Button"
-                              class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12"
-                            >
-                              <span class="fs-eight n1-color transition text-uppercase fw-semibold">
-                                Submit
-                              </span>
-                            </button>
-                          </div>
-                          <div class="col-sm-12 d-center flex-wrap justify-content-between gap-3 gap-sm-0">
-                            <div class="d-grid gap-6 gap-md-10">
-                              <p class="n4-color">
-                                Have an accounts?
-                                <Link to="/signin" class="p1-color">
-                                  Sign In
-                                </Link>
-                              </p>
-                            </div>
-                            <div class="d-flex justify-content-end">
-                              <a href="javascript:void(0)" class="n4-color">
-                                Forget password
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                        {error && <p class="p1-color mt-2">{error}</p>}
+      <LuxuryAuthShell
+        brandLogo={logo}
+        title="Create Your Auction Account"
+        subtitle="Join premium live vehicle auctions worldwide."
+        footerLegal={
+          <>
+            Protected listings, verified bids, concierge support.
+            <br />
+            <Link
+              to={searchParams.get('redirect') ? `/signin?redirect=${encodeURIComponent(searchParams.get('redirect'))}` : '/signin'}
+              className="lux-accent-link"
+              style={{ marginTop: '0.75rem', display: 'inline-block' }}
+            >
+              Already registered? Sign in
+            </Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} noValidate>
+          <GlassTextField id="su-name" label="Full name" autoComplete="name" value={name} onChange={setName} required />
+          <GlassTextField id="su-email" label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required />
+          <GlassTextField id="su-phone" label="Phone number (optional)" type="tel" autoComplete="tel" value={phone} onChange={setPhone} />
+          <PasswordField id="su-password" label="Password" autoComplete="new-password" value={password} onChange={setPassword} required />
+          <PasswordStrength password={password} />
+          <PasswordField id="su-confirm" label="Confirm password" autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} error={confirmError} required />
+          <AccountTypeToggle value={role} onChange={setRole} />
 
-                        <div class="d-flex gap-2 mt-3">
-                          <a href={`${apiBase}/api/auth/google`} class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12">
-                            <span class="fs-eight n1-color transition text-uppercase fw-semibold">Sign up with Google</span>
-                          </a>
-                          <a href={`${apiBase}/api/auth/facebook`} class="box-style style-two rounded-pill p1-bg-color d-center justify-content-start transition py-3 py-md-4 px-3 px-md-6 px-xl-12">
-                            <span class="fs-eight n1-color transition text-uppercase fw-semibold">Sign up with Facebook</span>
-                          </a>
-                        </div>
-                      </form>
-                    </div>
-                    <div class="end-area d-center">
-                      <p class="n4-color">
-                        By creating account you agree with our{" "}
-                        <a href="terms-conditions.html" class="p1-color">
-                          Terms of services
-                        </a>{" "}
-                        and{" "}
-                        <a href="privacy-policy.html" class="p1-color">
-                          Privacy Policy
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-7 col-md-5 col-xl-6 d-center justify-content-end mb-3 mb-md-0">
-              <div class="img-area position-relative d-center">
-                <img
-                  src="assets/images/auth-bg.webp"
-                  class="h-100 rounded-5"
-                  alt="img"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* <!-- Authentication end --> */}
+          <label className="lux-check">
+            <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} required />
+            I agree to the{' '}
+            <a href="/terms-conditions.html" className="lux-accent-link">
+              Terms &amp; Conditions
+            </a>{' '}
+            and{' '}
+            <Link to="/privacy" className="lux-accent-link">
+              Privacy Policy
+            </Link>
+            .
+          </label>
+
+          {error ? <div className="lux-banner-error">{error}</div> : null}
+
+          <button type="submit" className="lux-btn-primary" disabled={submitting}>
+            {submitting ? 'Creating account…' : 'Create Account'}
+          </button>
+        </form>
+
+        <SocialAuthButtons googleHref={createOAuthUrl('google')} facebookHref={createOAuthUrl('facebook')} variant="signup" />
+      </LuxuryAuthShell>
+      <div className="lux-mobile-bottom-spacer" aria-hidden />
     </div>
   );
 };

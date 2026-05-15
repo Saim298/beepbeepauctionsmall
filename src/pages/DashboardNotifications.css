@@ -1,0 +1,150 @@
+.dash-notifications__page-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.dash-notifications__header {
+  margin-bottom: 24px;
+}
+
+.dash-notifications__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dash-notifications__sub {
+  color: var(--muted, rgba(255, 255, 255, 0.55));
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.dash-notifications__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+}
+
+.dash-notifications__btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dash-notifications__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dash-notifications__link {
+  color: var(--primary-500, #d70007);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dash-notifications__link:hover {
+  text-decoration: underline;
+}
+
+.dash-notifications__loading,
+.dash-notifications__empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted, rgba(255, 255, 255, 0.55));
+}
+
+.dash-notifications__empty-icon {
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+
+.dash-notifications__empty-hint {
+  font-size: 13px;
+  margin-top: 8px;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dash-notifications__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dash-notifications__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dash-notifications__list li:last-child .dash-notifications__item {
+  border-bottom: none;
+}
+
+.dash-notifications__item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dash-notifications__item:not(.read) {
+  border-left: 3px solid var(--primary-500, #d70007);
+}
+
+.dash-notifications__item-title {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.dash-notifications__item-body {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.45;
+  margin-bottom: 8px;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.dash-notifications__item-time {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.dash-notifications__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.dash-notifications__page-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}

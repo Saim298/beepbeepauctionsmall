@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { DashboardAppChrome, DashboardMenuButton } from '../../components/DashboardAppChrome.jsx'
 import '../../pages/dashboard.css'
 import { FiCreditCard, FiPlus, FiCheck, FiTrash2, FiShield } from 'react-icons/fi'
+import { authFetchInit, getAuthToken } from '../../api/client'
+import { useNotify } from '../../context/NotificationContext.jsx'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
 
 const CardManagement = () => {
+  const { notify } = useNotify()
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')
   const [cards, setCards] = useState([])
   const [showAddCard, setShowAddCard] = useState(false)
@@ -35,12 +38,9 @@ const CardManagement = () => {
 
   const loadCards = async () => {
     try {
-      const token = localStorage.getItem('auth_token')
-      if (!token) return
+      if (!getAuthToken()) return
 
-      const response = await fetch(`${API}/api/cards/my-cards`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await fetch(`${API}/api/cards/my-cards`, authFetchInit({}))
 
       if (response.ok) {
         const data = await response.json()
@@ -58,20 +58,19 @@ const CardManagement = () => {
     setSubmitting(true)
 
     try {
-      const token = localStorage.getItem('auth_token')
-      const response = await fetch(`${API}/api/cards/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(form)
-      })
+      const response = await fetch(
+        `${API}/api/cards/add`,
+        authFetchInit({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+      )
 
       const result = await response.json()
 
       if (response.ok) {
-        alert('Card added successfully!')
+        notify({ title: 'Card added', message: 'Your payment method was saved.', severity: 'success' })
         setShowAddCard(false)
         setForm({
           cardNumber: '',
@@ -90,10 +89,10 @@ const CardManagement = () => {
         })
         await loadCards()
       } else {
-        alert(result.error || 'Failed to add card')
+        notify({ title: 'Could not add card', message: result.error || 'Please try again.', severity: 'error' })
       }
     } catch (error) {
-      alert('Error adding card. Please try again.')
+      notify({ title: 'Error', message: 'Could not add card. Please try again.', severity: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -101,19 +100,18 @@ const CardManagement = () => {
 
   const setDefaultCard = async (cardId) => {
     try {
-      const token = localStorage.getItem('auth_token')
-      const response = await fetch(`${API}/api/cards/${cardId}/set-default`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await fetch(
+        `${API}/api/cards/${cardId}/set-default`,
+        authFetchInit({ method: 'PUT' })
+      )
 
       if (response.ok) {
         await loadCards()
       } else {
-        alert('Failed to set default card')
+        notify({ title: 'Could not set default', message: 'Please try again.', severity: 'error' })
       }
     } catch (error) {
-      alert('Error updating card')
+      notify({ title: 'Error', message: 'Could not update default card.', severity: 'error' })
     }
   }
 
@@ -121,19 +119,15 @@ const CardManagement = () => {
     if (!confirm('Are you sure you want to remove this card?')) return
 
     try {
-      const token = localStorage.getItem('auth_token')
-      const response = await fetch(`${API}/api/cards/${cardId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await fetch(`${API}/api/cards/${cardId}`, authFetchInit({ method: 'DELETE' }))
 
       if (response.ok) {
         await loadCards()
       } else {
-        alert('Failed to remove card')
+        notify({ title: 'Remove failed', message: 'Could not remove this card.', severity: 'error' })
       }
     } catch (error) {
-      alert('Error removing card')
+      notify({ title: 'Error', message: 'Could not remove card.', severity: 'error' })
     }
   }
 

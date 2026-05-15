@@ -1,0 +1,90 @@
+.notify-host {
+  position: fixed;
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  z-index: 10060;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.notify-card {
+  pointer-events: auto;
+  max-width: min(400px, 100%);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-300, rgba(255, 255, 255, 0.12));
+  background: var(--glass-100, rgba(20, 20, 24, 0.94));
+  color: var(--text, #f4f4f5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  animation: notifySlide 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  backdrop-filter: blur(12px);
+}
+
+.notify-card--success {
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.notify-card--error {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.notify-card--warning {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.notify-card--info {
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.notify-card__title {
+  margin: 0 0 4px 0;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.notify-card__msg {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted, #a1a1aa);
+}
+
+.notify-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notify-card__x {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 0 0 8px;
+}
+
+.notify-card__x:hover {
+  opacity: 1;
+}
+
+@keyframes notifySlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

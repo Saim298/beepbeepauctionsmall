@@ -9,6 +9,7 @@ import 'swiper/css/pagination';
 
 // Import custom styles
 import './CarAuctionCards.css';
+import { BRAND_NAME, BRAND_NAME_SHORT } from '../../constants/brand.js';
 
 const CarAuctionCards = () => {
   return (
@@ -39,7 +40,7 @@ const CarAuctionCards = () => {
                 </div>
                 <h2 className="fs-two text-uppercase">
                   <span className="fw-bolder n4-color">Live on </span>
-                  <span className="fw-normal n4-color"> Beep Beep Auctions</span>
+                  <span className="fw-normal n4-color"> {BRAND_NAME}</span>
                 </h2>
               </div>
             </div>
@@ -1658,10 +1659,10 @@ const CarAuctionCards = () => {
               <div className="selling-details">
                 <div className="description-area mb-6">
                   <p className="n5-color fs-seven mb-4 lh-base">
-                    It only costs <span className="p1-color fw-bold fs-six">$99</span> to get your vehicle listed on Beep Beep Auctions with an additional <span className="p1-color fw-bold fs-six">$200 ONLY</span> if your vehicle sells.
+                    It only costs <span className="p1-color fw-bold fs-six">$99</span> to get your vehicle listed on {BRAND_NAME} with an additional <span className="p1-color fw-bold fs-six">$200 ONLY</span> if your vehicle sells.
                   </p>
                   <p className="n5-color fs-seven mb-4 lh-base">
-                    Simply sign up at Beep Beep Auctions, fill out some basic details and one of our Concierge team will be in touch with you. Our team of professionals guide you step by step to turn this very large decision into a very simple process.
+                    Simply sign up at {BRAND_NAME}, fill out some basic details and one of our Concierge team will be in touch with you. Our team of professionals guide you step by step to turn this very large decision into a very simple process.
                   </p>
                   <p className="n5-color fs-seven mb-4 lh-base">
                     Not only do we work with you, our seller, during the auction, but we also work with our bidders to make sure we get you the highest price possible from the most knowledgeable buyers.
@@ -1714,17 +1715,17 @@ const CarAuctionCards = () => {
                 </div>
                 <h2 className="fs-two text-uppercase">
                   <span className="fw-bolder text-uppercase n4-color d-block">
-                    How Beep Beep
+                    How {BRAND_NAME}
                   </span>
                   <span className="fw-normal text-uppercase n4-color">
-                    Auctions Work
+                    Works
                   </span>
                 </h2>
               </div>
               <div className="auction-details">
                 <div className="description-area mb-6">
                   <p className="n5-color fs-seven mb-4 lh-base">
-                    Beep Beep Auctions is a revolutionary new way to buy your next classic car. Beep Beep is building the industry standard for buying and selling classic cars with trust, safety and a white glove level service at the heart of what we offer.
+                    {BRAND_NAME} is a revolutionary new way to buy your next classic car. {BRAND_NAME_SHORT} is building the industry standard for buying and selling classic cars with trust, safety and a white glove level service at the heart of what we offer.
                   </p>
                   <p className="n5-color fs-seven mb-4 lh-base">
                     If you're looking for a classic vehicle, you can check out pictures & videos of our upcoming auctions, read our in-depth vehicle descriptions, and can register to start bidding!
@@ -1812,7 +1813,7 @@ const CarAuctionCards = () => {
                        {/* Club Name */}
                        <div className="brand-name-container">
                        <h2 className="fs-one text-uppercase fw-bolder n4-color mb-4">
-                    Beep Beep Auctions Club
+                    {BRAND_NAME} Club
                   </h2>
                        </div>
 
@@ -1883,9 +1884,9 @@ const CarAuctionCards = () => {
                       'Collector Car Valuations',
                       'Partner Discounts',
                       'Insurance Discounts',
-                      'Beep Beep Magazine',
+                      `${BRAND_NAME_SHORT} Magazine`,
                       'Community Discussion Board',
-                      'Exclusive Beep Beep Gear'
+                      `Exclusive ${BRAND_NAME_SHORT} Gear`
                     ].map((benefit, idx) => (
                       <li key={idx} className="benefit-item d-flex align-items-start mb-3">
                         <div className="benefit-icon me-3 mt-1">

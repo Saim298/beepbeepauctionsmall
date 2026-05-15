@@ -11,8 +11,9 @@ import {
   FiCalendar,
   FiSettings
 } from 'react-icons/fi';
+import { authFetchInit } from '../api/client';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'https://beep-auctions-backend.onrender.com';
 
 const SellerDashboard = () => {
   const [auctions, setAuctions] = useState([]);
@@ -33,9 +34,7 @@ const SellerDashboard = () => {
   const loadSellerAuctions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/auctions/user/my-auctions?type=selling`, {
-        credentials: 'include'
-      });
+      const response = await fetch(`${API_BASE}/api/auctions/user/my-auctions?type=selling`, authFetchInit({}));
 
       if (response.ok) {
         const data = await response.json();

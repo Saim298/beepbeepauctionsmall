@@ -116,6 +116,13 @@
   animation: slideUp .25s ease;
 }
 
+/* Share modal on part detail — matches dark auction UI */
+.pdf-modal.pdf-modal--dark {
+  background: var(--dark-card2, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--dark-border, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
 .pdf-modal-close {
   position: absolute;
   top: 14px;
@@ -132,9 +139,21 @@
   transition: var(--tr);
 }
 
+.pdf-modal--dark .pdf-modal-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dark-border2, rgba(255, 255, 255, 0.14));
+}
+
 .pdf-modal-close:hover {
   background: var(--p1-light);
   color: var(--p1);
+}
+
+.pdf-modal--dark .pdf-modal-close:hover {
+  background: rgba(215, 0, 7, 0.2);
+  color: #fff;
+  border-color: var(--p1, #d70007);
 }
 
 .pdf-modal h3 {
@@ -144,10 +163,19 @@
   color: #000;
 }
 
+.pdf-modal--dark h3 {
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.02em;
+}
+
 .pdf-modal p {
   font-size: 14px;
   color: #6b7280;
   margin: 0 0 22px;
+}
+
+.pdf-modal--dark p {
+  color: var(--text-secondary, rgba(255, 255, 255, 0.55));
 }
 
 .pdf-share-grid {
@@ -170,12 +198,25 @@
   font-weight: 500;
   transition: var(--tr);
   color: #111;
+  text-decoration: none;
+}
+
+.pdf-modal--dark .pdf-share-btn {
+  background: rgba(0, 0, 0, 0.28);
+  border-color: var(--dark-border2, rgba(255, 255, 255, 0.14));
+  color: var(--text-primary, #fff);
 }
 
 .pdf-share-btn:hover {
   border-color: var(--p1);
   background: var(--p1-light);
   color: var(--p1);
+}
+
+.pdf-modal--dark .pdf-share-btn:hover {
+  border-color: var(--p1, #d70007);
+  background: rgba(215, 0, 7, 0.12);
+  color: #fff;
 }
 
 .pdf-copy-row {
@@ -190,6 +231,12 @@
   border-radius: var(--radius-sm);
   font-size: 13px;
   outline: none;
+}
+
+.pdf-modal--dark .pdf-copy-input {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: var(--dark-border2, rgba(255, 255, 255, 0.14));
+  color: var(--text-primary, #fff);
 }
 
 .pdf-copy-input:focus {

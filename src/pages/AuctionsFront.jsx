@@ -7,7 +7,7 @@ import { FiClock, FiUsers, FiDollarSign, FiCheckCircle, FiAlertCircle } from "re
 import io from 'socket.io-client';
 import { MobileBottomBarAuctions, MobileFilterSheet, MobileSearchSheet } from "../components/MobileBottomBar";
 
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiBase = (import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com").replace(/\/$/, "");
 
 const AuctionCard = ({ auction, toAbsUrl }) => {
   const navigate = useNavigate();
@@ -45,7 +45,12 @@ const AuctionCard = ({ auction, toAbsUrl }) => {
       <div className="img-area position-relative">
         <div className="position-relative overflow-hidden rounded-3">
           <img
-            src={auction.carListing?.media?.[0]?.url ? toAbsUrl(auction.carListing.media[0].url) : '/assets/images/handpicked-img-1.webp'}
+            src={
+              (() => {
+                const raw = auction.carListing?.images?.[0] || auction.carListing?.media?.[0]?.url;
+                return raw ? toAbsUrl(raw) : "/assets/images/handpicked-img-1.webp";
+              })()
+            }
             alt={auction.carListing?.name}
             className="w-100 h-100 object-fit-cover"
             style={{ height: '200px' }}
@@ -259,8 +264,14 @@ const AuctionsFront = () => {
   }, [q, filters]);
 
   useEffect(() => {
-    fetch(`${apiBase}/api/makes`).then(r => r.json()).then(setMakes).catch(()=>{});
-    fetch(`${apiBase}/api/categories`).then(r => r.json()).then(setCategories).catch(()=>{});
+    fetch(`${apiBase}/api/makes`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setMakes(Array.isArray(data) ? data : []))
+      .catch(() => setMakes([]));
+    fetch(`${apiBase}/api/categories`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch(() => setCategories([]));
     
     // Setup socket connection for real-time updates
     const token = localStorage.getItem('auth_token');
@@ -281,7 +292,7 @@ const AuctionsFront = () => {
               ...auction,
               currentBid: updateData.currentBid,
               totalBids: updateData.totalBids,
-              highestBidder: updateData.highestBidder,
+              highestBidder: updateData.highestBidder ?? auction.highestBidder,
               reserveMet: updateData.reserveMet
             }
           : auction
@@ -297,7 +308,7 @@ const AuctionsFront = () => {
               ...auction,
               currentBid: bidData.currentBid,
               totalBids: bidData.totalBids,
-              highestBidder: bidData.bidder
+              highestBidder: bidData.bidder ?? auction.highestBidder
             }
           : auction
       ));
@@ -335,12 +346,22 @@ const AuctionsFront = () => {
     }
     
     fetch(`${apiBase}/api/auctions/active?${params.toString()}`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(({ auctions: data, total: t }) => { 
-        setAuctions(data || []); 
-        setTotal(t || 0); 
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (!body || typeof body !== "object") {
+          setAuctions([]);
+          setTotal(0);
+          return;
+        }
+        const data = body.auctions;
+        const t = body.total;
+        setAuctions(Array.isArray(data) ? data : []);
+        setTotal(typeof t === "number" ? t : 0);
       })
-      .catch(() => {})
+      .catch(() => {
+        setAuctions([]);
+        setTotal(0);
+      })
       .finally(() => setLoading(false));
       
     return () => controller.abort();
@@ -348,9 +369,11 @@ const AuctionsFront = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const toAbsUrl = (u) => {
-    if (!u) return "";
-    if (u.startsWith("http") || u.startsWith("data:")) return u;
-    return `${apiBase}${u}`;
+    if (u == null || u === "") return "";
+    const s = String(u).trim();
+    if (s.startsWith("http") || s.startsWith("data:")) return s;
+    const path = s.startsWith("/") ? s : `/${s}`;
+    return `${apiBase}${path}`;
   };
 
   const clearAllFilters = () => {

@@ -7,8 +7,9 @@ import logo from '../image/logo.png'
 import './chat.css'
 import './dashboard.css'
 import { getAuthToken } from '../api/client.js'
+import { BRAND_NAME } from '../constants/brand.js'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com';
 
 const authHeader = () => {
   const t = getAuthToken()
@@ -666,8 +667,8 @@ const Chat = () => {
             <span>Back</span>
           </button>
           <div className="nav-brand">
-            <img src={logo} alt="Beep Auction" />
-            <span>Beep Beep Auction</span>
+            <img src={logo} alt={BRAND_NAME} />
+            <span>{BRAND_NAME}</span>
           </div>
         </nav>
         <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
@@ -707,8 +708,8 @@ const Chat = () => {
           <span>Back</span>
         </button>
         <div className="nav-brand">
-          <img src={logo} alt="Beep Auction" />
-          <span>Beep Beep Auction</span>
+          <img src={logo} alt={BRAND_NAME} />
+          <span>{BRAND_NAME}</span>
         </div>
         <button className="nav-menu" aria-label="Toggle sidebar" onClick={() => setSidebarOpen(s => !s)}>
           <FiMenu />

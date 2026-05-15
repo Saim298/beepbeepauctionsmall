@@ -5,7 +5,7 @@ import ListingsNavbar from "../components/ListingsNavbar";
 import { HiHome, HiChevronRight } from "react-icons/hi";
 import { MdDirectionsCar } from "react-icons/md";
 
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
 const ListingsFront = () => {
   const [q, setQ] = useState("");

@@ -6,7 +6,7 @@ import { FiClock, FiDollarSign, FiUsers, FiHeart, FiShare2, FiTrendingUp, FiAler
 import { MdGavel } from 'react-icons/md'
 import io from 'socket.io-client'
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const apiBase = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
 
 const AuctionDetails = () => {
   const { id } = useParams()

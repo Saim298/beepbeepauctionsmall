@@ -1,0 +1,89 @@
+/* Dark marketplace navbar — use with <PartsNavbar variant="dark" /> */
+
+.parts-navbar-dark {
+  background: rgba(10, 10, 14, 0.94) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+.parts-navbar-dark .form-control {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f4f4f5 !important;
+}
+
+.parts-navbar-dark .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.parts-navbar-dark .form-control:focus {
+  border-color: rgba(215, 0, 7, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(215, 0, 7, 0.2);
+}
+
+.parts-navbar-dark .parts-navbar-dark__search-icon {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.parts-navbar-dark .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+}
+
+.parts-navbar-dark .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.parts-navbar-dark .dropdown-menu {
+  background: #16161c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.parts-navbar-dark .dropdown-item {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.parts-navbar-dark .dropdown-item:hover,
+.parts-navbar-dark .dropdown-item:focus {
+  background: rgba(215, 0, 7, 0.15);
+  color: #fff;
+}
+
+.parts-navbar-dark .dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.parts-navbar-dark .parts-navbar-dark__mobile-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.parts-navbar-dark .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.parts-navbar-dark .navbar-toggler-icon {
+  filter: invert(1);
+}
+
+.parts-navbar-dark .btn-primary {
+  background: #d70007 !important;
+  border-color: #d70007 !important;
+}
+
+.parts-navbar-dark .btn-outline-primary {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.parts-navbar-dark .btn-outline-primary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}

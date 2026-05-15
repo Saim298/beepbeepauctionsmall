@@ -1,0 +1,36 @@
+.privacy-policy-page .privacy-policy-body {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #0f0f12 !important; /* Ensure injected HTML is readable on light backgrounds */
+  background: transparent;
+}
+
+.privacy-policy-page .privacy-policy-body p {
+  margin-bottom: 1rem;
+  color: inherit;
+}
+
+.privacy-policy-page .privacy-policy-body p.privacy-placeholder-note {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #d70007;
+  background: rgba(215, 0, 7, 0.06);
+  margin-bottom: 1.5rem;
+  color: inherit;
+}
+
+/* Header overlap guard: Header is visually prominent and can be fixed on scroll. */
+.privacy-policy-page .privacy-policy-main {
+  padding-top: 120px;
+}
+
+.privacy-policy-page .privacy-policy-body table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.privacy-policy-page .privacy-policy-toolbar a:hover {
+  text-decoration: underline !important;
+}

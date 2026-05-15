@@ -4,7 +4,7 @@ import "../../pages/dashboard.css";
 import { DashboardAppChrome, DashboardMenuButton } from "../../components/DashboardAppChrome.jsx";
 import { getAuthToken } from "../../api/client.js";
 
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
 function mapApiPartToForm(p) {
   if (!p) return null;

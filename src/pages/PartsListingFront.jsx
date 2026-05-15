@@ -1,14 +1,242 @@
-import React, { useEffect, useMemo, useState } from "react";
-import PartCardFront from "../components/PartCardFront";
-import Pagination from "../components/Pagination";
-import PartsNavbar from "../components/PartsNavbar";
+import React, { useEffect, useMemo, useState, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  FiSearch,
+  FiHeart,
+  FiSliders,
+  FiHome,
+  FiShoppingCart,
+  FiPackage,
+} from "react-icons/fi";
+import { MdOutlineDashboard, MdGavel } from "react-icons/md";
 import FiltersSidebar from "../components/FiltersSidebar";
-import "../components/FiltersSidebar.css";
-import { HiHome, HiChevronRight } from "react-icons/hi";
-import { FiPackage } from "react-icons/fi";
-import { MobileBottomBarParts, MobileFilterSheet, MobileSearchSheet } from "../components/MobileBottomBar";
+import PartCardLuxury from "../components/PartCardLuxury";
+import { useCart } from "../context/CartContext.jsx";
+import { getAuthToken } from "../api/client";
+import "./AuctionsFrontLayout.css";
+import "./PartsListingFront.css";
+import { BRAND_NAME_SHORT } from "../constants/brand.js";
 
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiBase = (import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com").replace(
+  /\/$/,
+  ""
+);
+
+const userInitials = (user) => {
+  if (!user) return "?";
+  const name = (user.name || user.username || user.email || "U").trim();
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 2);
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
+const userAvatarSrc = (user) => {
+  if (!user) return null;
+  const raw = user.avatarUrl || user.avatarFile;
+  if (!raw) return null;
+  const s = String(raw).trim();
+  if (s.startsWith("http") || s.startsWith("data:")) return s;
+  const path = s.startsWith("/") ? s : `/${s}`;
+  return `${apiBase}${path}`;
+};
+
+const PartsLuxuryTopNavbar = ({ q, setQ, navUser }) => {
+  const { itemCount } = useCart();
+  const avatar = userAvatarSrc(navUser);
+  const initials = userInitials(navUser);
+  return (
+    <div className="lux-navbar d-none d-lg-flex">
+      <Link to="/" className="lux-nav-logo">
+        {BRAND_NAME_SHORT.slice(0, 4)}
+        <span>{BRAND_NAME_SHORT.slice(4)}</span>
+      </Link>
+      <div className="lux-nav-search">
+        <FiSearch className="search-icon" size={20} />
+        <input
+          type="text"
+          placeholder="Search parts, brands, OEM numbers..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
+      <div className="lux-nav-actions">
+        <button type="button" className="lux-nav-btn" aria-label="Saved">
+          <FiHeart />
+        </button>
+        <Link to="/cart" className="lux-nav-btn position-relative" title="Cart">
+          <FiShoppingCart />
+          {itemCount > 0 ? (
+            <span
+              style={{
+                position: "absolute",
+                top: -4,
+                right: -4,
+                background: "#D70007",
+                color: "#fff",
+                borderRadius: "50%",
+                width: 18,
+                height: 18,
+                fontSize: 11,
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {itemCount > 9 ? "9+" : itemCount}
+            </span>
+          ) : null}
+        </Link>
+        <Link
+          to="/dashboard"
+          className="lux-nav-profile"
+          title={navUser?.name || "Dashboard"}
+        >
+          {avatar ? (
+            <img src={avatar} alt="" className="lux-nav-profile-img" />
+          ) : (
+            initials
+          )}
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const PartsLuxuryMobileHeader = () => {
+  const { itemCount } = useCart();
+  return (
+    <div className="lux-mobile-header">
+      <Link to="/" className="lux-nav-btn" aria-label="Home">
+        <FiHome size={22} />
+      </Link>
+      <Link to="/" className="lux-nav-logo" style={{ fontSize: "20px" }}>
+        {BRAND_NAME_SHORT.slice(0, 4)}
+        <span>{BRAND_NAME_SHORT.slice(4)}</span>
+      </Link>
+      <Link to="/cart" className="lux-nav-btn position-relative" aria-label="Cart">
+        <FiShoppingCart size={22} />
+        {itemCount > 0 ? (
+          <span
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              background: "#D70007",
+              color: "#fff",
+              borderRadius: "50%",
+              width: 16,
+              height: 16,
+              fontSize: 10,
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {itemCount > 9 ? "9+" : itemCount}
+          </span>
+        ) : null}
+      </Link>
+    </div>
+  );
+};
+
+const PartsLuxuryMobileDock = () => {
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+  return (
+    <div className="lux-mobile-dock">
+      <Link to="/" className={`lux-dock-item ${isActive("/") ? "active" : ""}`}>
+        <FiHome className="lux-dock-icon" />
+        <span className="lux-dock-label">Home</span>
+      </Link>
+      <Link
+        to="/auctions"
+        className={`lux-dock-item ${location.pathname.startsWith("/auctions") ? "active" : ""}`}
+      >
+        <MdGavel className="lux-dock-icon" />
+        <span className="lux-dock-label">Auctions</span>
+      </Link>
+      <Link
+        to="/parts"
+        className={`lux-dock-item ${isActive("/parts") ? "active" : ""}`}
+      >
+        <FiPackage className="lux-dock-icon" />
+        <span className="lux-dock-label">Parts</span>
+      </Link>
+      <Link to="/cart" className={`lux-dock-item ${isActive("/cart") ? "active" : ""}`}>
+        <FiShoppingCart className="lux-dock-icon" />
+        <span className="lux-dock-label">Cart</span>
+      </Link>
+      <Link
+        to="/dashboard"
+        className={`lux-dock-item ${location.pathname.startsWith("/dashboard") ? "active" : ""}`}
+      >
+        <MdOutlineDashboard className="lux-dock-icon" />
+        <span className="lux-dock-label">Dashboard</span>
+      </Link>
+    </div>
+  );
+};
+
+const PartsLuxuryMobileFilterSheet = ({
+  open,
+  onClose,
+  filters,
+  setFilters,
+  brands,
+  categories,
+  clearAll,
+  activeFilterCount,
+}) => (
+  <>
+    <div
+      className={`lux-bottom-sheet-overlay ${open ? "open" : ""}`}
+      onClick={onClose}
+      role="presentation"
+    />
+    <div className={`lux-bottom-sheet ${open ? "open" : ""}`}>
+      <div className="lux-sheet-handle" />
+      <div className="lux-sheet-header">
+        <h3 className="lux-sheet-title">Filters</h3>
+        <button
+          type="button"
+          className="lux-nav-btn"
+          onClick={clearAll}
+          style={{ fontSize: "14px", color: "#D70007" }}
+        >
+          Clear all
+        </button>
+      </div>
+      <div className="lux-sheet-content">
+        <FiltersSidebar
+          luxury
+          hideSearch
+          q=""
+          setQ={() => {}}
+          filters={filters}
+          setFilters={setFilters}
+          brands={brands}
+          categories={categories}
+          activeFilterCount={activeFilterCount}
+        />
+      </div>
+      <div className="lux-sheet-footer">
+        <button
+          type="button"
+          className="lux-btn-primary"
+          style={{ width: "100%" }}
+          onClick={onClose}
+        >
+          Apply filters
+        </button>
+      </div>
+    </div>
+  </>
+);
 
 const PartsListingFront = () => {
   const [q, setQ] = useState("");
@@ -17,67 +245,113 @@ const PartsListingFront = () => {
   const [limit] = useState(12);
   const [total, setTotal] = useState(0);
   const [parts, setParts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [navUser, setNavUser] = useState(null);
 
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const [filters, setFilters] = useState({ 
-    brand: "", 
-    category: "", 
-    condition: "", 
+  const [filters, setFilters] = useState({
+    brand: "",
+    category: "",
+    condition: "",
     priceRange: "",
-    compatibility: "" 
+    compatibility: "",
   });
 
   const activeFilterCount = useMemo(() => {
-    return [q, filters.brand, filters.category, filters.condition, filters.priceRange, filters.compatibility].filter(Boolean).length;
+    return [
+      q,
+      filters.brand,
+      filters.category,
+      filters.condition,
+      filters.priceRange,
+      filters.compatibility,
+    ].filter(Boolean).length;
   }, [q, filters]);
 
+  const filtersOnlyCount = useMemo(() => {
+    return [
+      filters.brand,
+      filters.category,
+      filters.condition,
+      filters.priceRange,
+      filters.compatibility,
+    ].filter(Boolean).length;
+  }, [filters]);
+
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
+  const prevFiltersKey = useRef(filtersKey);
   useEffect(() => {
-    fetch(`${apiBase}/api/parts/brands`).then(r => r.json()).then(setBrands).catch(()=>{});
-    fetch(`${apiBase}/api/parts/categories`).then(r => r.json()).then(setCategories).catch(()=>{});
+    if (prevFiltersKey.current !== filtersKey) {
+      prevFiltersKey.current = filtersKey;
+      setPage(1);
+    }
+  }, [filtersKey]);
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/parts/brands`)
+      .then((r) => r.json())
+      .then(setBrands)
+      .catch(() => {});
+    fetch(`${apiBase}/api/parts/categories`)
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setNavUser(null);
+      return;
+    }
+    fetch(`${apiBase}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => {
+        if (r.status === 401) return null;
+        return r.ok ? r.json() : null;
+      })
+      .then((data) => setNavUser(data?.user || null))
+      .catch(() => setNavUser(null));
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: String(limit), sort });
+    setLoading(true);
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      sort,
+    });
     if (q) params.set("search", q);
     if (filters.brand) params.set("brand", filters.brand);
     if (filters.category) params.set("category", filters.category);
     if (filters.condition) params.set("condition", filters.condition);
     if (filters.compatibility) params.set("compatibility", filters.compatibility);
-    
-    // Handle price range filter
     if (filters.priceRange) {
-      const [min, max] = filters.priceRange.split('-');
+      const [min, max] = filters.priceRange.split("-");
       if (min) params.set("minPrice", min);
       if (max) params.set("maxPrice", max);
     }
-    
+
     fetch(`${apiBase}/api/parts?${params.toString()}`, { signal: controller.signal })
-      .then(r => r.json())
-      .then(({ parts: partsData, pagination }) => { 
+      .then((r) => r.json())
+      .then(({ parts: partsData, pagination }) => {
         const visibleParts = (partsData || []).filter(
           (part) => part?.status === "active" && Number(part?.quantity || 0) > 0
         );
-        setParts(visibleParts); 
-        setTotal(pagination?.totalParts || visibleParts.length); 
+        setParts(visibleParts);
+        setTotal(pagination?.totalParts || visibleParts.length);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
     return () => controller.abort();
   }, [q, sort, page, limit, filters]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const toAbsUrl = (u) => {
-    if (!u) return "";
-    const s = String(u).trim();
-    if (s.startsWith("http") || s.startsWith("data:")) return s;
-    if (s.startsWith("//")) return `https:${s}`;
-    const path = s.startsWith("/") ? s : `/${s}`;
-    return `${String(apiBase).replace(/\/$/, "")}${path}`;
-  };
 
   const clearAllFilters = () => {
     setQ("");
@@ -91,228 +365,242 @@ const PartsListingFront = () => {
   };
 
   return (
-    <div className="mobile-content-pad">
-      <div className="d-none d-lg-block">
-        <PartsNavbar q={q} setQ={setQ} />
-      </div>
+    <div className="luxury-auctions-page parts-listing-root">
+      <PartsLuxuryTopNavbar q={q} setQ={setQ} navUser={navUser} />
+      <PartsLuxuryMobileHeader />
 
-      <MobileBottomBarParts
-        activeFilterCount={activeFilterCount}
-        onFilterOpen={() => setMobileFilterOpen(true)}
-        onSearchOpen={() => setMobileSearchOpen(true)}
-      />
-
-      <MobileFilterSheet
-        open={mobileFilterOpen}
-        onClose={() => setMobileFilterOpen(false)}
-        title="Filter Products"
-        activeFilterCount={activeFilterCount}
-        onClearAll={clearAllFilters}
-      >
-        <div className="mb-3">
-          <label className="fw-bold mb-2 d-block">Search</label>
+      <div className="lux-mobile-search-bar">
+        <div className="position-relative">
+          <FiSearch className="lux-mobile-search-icon" size={20} />
           <input
             type="text"
-            className="form-control"
-            placeholder="Search parts, brands..."
+            className="lux-mobile-search-input"
+            placeholder="Search parts, brands, compatibility..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
+      </div>
 
-        <div className="mb-3">
-          <label className="fw-bold mb-2 d-block">Brand</label>
-          <select className="form-select" value={filters.brand} onChange={(e) => setFilters((p) => ({ ...p, brand: e.target.value }))}>
-            <option value="">All Brands</option>
-            {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-        </div>
-        <div className="mb-3">
-          <label className="fw-bold mb-2 d-block">Category</label>
-          <select className="form-select" value={filters.category} onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value }))}>
-            <option value="">All Categories</option>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="mb-3">
-          <label className="fw-bold mb-2 d-block">Condition</label>
-          <select className="form-select" value={filters.condition} onChange={(e) => setFilters((p) => ({ ...p, condition: e.target.value }))}>
-            <option value="">All Conditions</option>
-            <option value="new">New</option>
-            <option value="used_excellent">Used - Excellent</option>
-            <option value="used_good">Used - Good</option>
-            <option value="used_fair">Used - Fair</option>
-            <option value="refurbished">Refurbished</option>
-            <option value="remanufactured">Remanufactured</option>
-          </select>
-        </div>
-        <div className="mb-3">
-          <label className="fw-bold mb-2 d-block">Price</label>
-          <select className="form-select" value={filters.priceRange} onChange={(e) => setFilters((p) => ({ ...p, priceRange: e.target.value }))}>
-            <option value="">All Prices</option>
-            <option value="0-100">$0 - $100</option>
-            <option value="100-300">$100 - $300</option>
-            <option value="300-1000">$300 - $1000</option>
-            <option value="1000-">$1000+</option>
-          </select>
-        </div>
+      <section className="lux-hero">
+        <div className="lux-hero-glow" />
+        <h1 className="lux-hero-title">Shop verified auto parts</h1>
+        <p className="lux-hero-subtitle">
+          OEM and aftermarket parts from trusted sellers — same polish as live
+          auctions, built for the parts catalog.
+        </p>
 
-        <div className="mb-2">
-          <label className="fw-bold mb-2 d-block">Compatibility</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="e.g. BMW, Toyota..."
-            value={filters.compatibility}
-            onChange={(e) => setFilters((p) => ({ ...p, compatibility: e.target.value }))}
-          />
-        </div>
-      </MobileFilterSheet>
-
-      <MobileSearchSheet
-        open={mobileSearchOpen}
-        onClose={() => setMobileSearchOpen(false)}
-        value={q}
-        onChange={setQ}
-      />
-      
-      {/* Breadcrumb Section */}
-      <section className="py-3 bg-light">
-        <div className="container-fluid px-3 px-md-4 px-lg-6">
-          <nav aria-label="breadcrumb">
-            <ol className="breadcrumb mb-0 d-flex align-items-center">
-              <li className="breadcrumb-item d-flex align-items-center">
-                <a href="/" className="text-decoration-none d-flex align-items-center text-black" style={{color: '#D70007'}}>
-                  <HiHome className="me-1" size={16} />
-                  Home
-                </a>
-              </li>
-              <li className="breadcrumb-item d-flex align-items-center">
-                <HiChevronRight className="mx-2 text-muted" style={{color: '#D70007'}} size={14} />
-                <span className="d-flex align-items-center text-black" style={{color: '#D70007'}}>
-                  <FiPackage className="me-1" size={16} />
-                  Products
-                </span>
-              </li>
-              {filters.brand && (
-                <li className="breadcrumb-item d-flex align-items-center">
-                  <HiChevronRight className="mx-2 text-muted" size={14} />
-                  <span className="text-primary fw-medium text-black">
-                    {brands.find(b => b === filters.brand) || filters.brand}
-                  </span>
-                </li>
-              )}
-              {filters.category && (
-                <li className="breadcrumb-item d-flex align-items-center">
-                  <HiChevronRight className="mx-2 text-muted" size={14} />
-                  <span className="text-primary fw-medium">
-                    {filters.category.replace('_', ' ')}
-                  </span>
-                </li>
-              )}
-            </ol>
-          </nav>
+        <div className="lux-quick-filters">
+          <button
+            type="button"
+            className={`lux-quick-pill ${activeFilterCount === 0 ? "active" : ""}`}
+            onClick={clearAllFilters}
+          >
+            All parts
+          </button>
+          <button
+            type="button"
+            className={`lux-quick-pill ${filters.condition === "new" ? "active" : ""}`}
+            onClick={() =>
+              setFilters((p) => ({
+                ...p,
+                condition: p.condition === "new" ? "" : "new",
+              }))
+            }
+          >
+            New only
+          </button>
+          {(Array.isArray(categories) ? categories : []).slice(0, 4).map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`lux-quick-pill ${filters.category === c ? "active" : ""}`}
+              onClick={() =>
+                setFilters((p) => ({
+                  ...p,
+                  category: p.category === c ? "" : c,
+                }))
+              }
+            >
+              {typeof c === "string" ? c.replace(/_/g, " ") : c}
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="section-sidebar details-section position-relative">
-        <div className="container-fluid position-relative py-8 py-md-15">
-          <div className="row gy-12 gy-xxl-0 px-3 px-md-4 px-lg-6">
-            {/* Sidebar Column */}
-            <div className="col-md-4 col-lg-3 d-none d-lg-block">
-              <div className="filters-sidebar-container">
-                <FiltersSidebar
-                  q={q}
-                  setQ={setQ}
-                  filters={filters}
-                  setFilters={setFilters}
-                  brands={brands}
-                  categories={categories}
-                  activeFilterCount={activeFilterCount}
-                />
-              </div>
-            </div>
-            
-            {/* Main Content Column */}
-            <div className="col-md-8 col-lg-9 main-body-content z-1 px-0">
-              <div className="row d-center justify-content-between gy-3 mb-6 mb-md-11">
-                <div className="col-sm-6 col-md-4 col-xl-5">
-                  <div className="head-area d-grid gap-1 gap-md-2">
-                    <h5 className="text-uppercase n4-color">{total} products available</h5>
-                    <p className="fs-nine n4-color">
-                      High-quality car products from trusted sellers.
-                    </p>
-                  </div>
-                </div>
-                <div className="col-sm-6 col-md-8 col-xl-7">
-                  <div className="row justify-content-end justify-content-xl-start justify-content-xl-end">
-                    <div className="col-md-7 d-flex justify-content-end gap-3 gap-md-5">
-                      <div className="d-center w-100 justify-content-end gap-2">
-                        <span className="n4-color text-capitalize text-nowrap">
-                          Sort By:
-                        </span>
-                        <div className="w-auto single-input single-select w-100 px-3 px-md-4 py-2 py-lg-3 cus-border border b-sixth rounded-pill">
-                          <select 
-                            className="select-two"
-                            value={sort}
-                            onChange={(e) => setSort(e.target.value)}
-                          >
-                            <option value="-createdAt">Newest</option>
-                            <option value="createdAt">Oldest</option>
-                            <option value="-price">Price High to Low</option>
-                            <option value="price">Price Low to High</option>
-                            <option value="name">Name A-Z</option>
-                            <option value="-name">Name Z-A</option>
-                            <option value="-views">Most Popular</option>
-                            <option value="views">Least Popular</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid-list-btn d-center d-none d-lg-flex gap-2 gap-md-3">
-                        <button className="box-area box-ten transition n1-bg-color cus-border border rounded-circle d-center grid-active">
-                          <span className="d-center fs-five n4-color">
-                            <i className="ph ph-squares-four"></i>
-                          </span>
-                        </button>
-                        <button className="box-area box-ten transition n1-bg-color cus-border border rounded-circle d-center list-active">
-                          <span className="d-center fs-five n4-color">
-                            <i className="ph ph-list"></i>
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Parts Listings */}
-              <div className="grid-list-template second-template">
-                {parts.length === 0 ? (
-                  <div className="text-center py-5">
-                    <h5 className="n4-color">No products found</h5>
-                    <p className="n5-color">Try adjusting your filters or search terms</p>
-                  </div>
-                ) : (
-                  parts.map(part => (
-                    <PartCardFront key={part._id} part={part} toAbsUrl={toAbsUrl} />
-                  ))
-                )}
-              </div>
-
-              {/* Pagination */}
-              <div className="col-12">
-                <Pagination 
-                  currentPage={page} 
-                  totalPages={totalPages} 
-                  onPageChange={setPage} 
-                />
-              </div>
-            </div>
-
+      <div className="lux-main-container">
+        <aside className="lux-sidebar">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0 }}>Filters</h3>
+            {activeFilterCount > 0 ? (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#D70007",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Reset
+              </button>
+            ) : null}
           </div>
-        </div>
-      </section>
+          <FiltersSidebar
+            luxury
+            hideSearch
+            q={q}
+            setQ={setQ}
+            filters={filters}
+            setFilters={setFilters}
+            brands={brands}
+            categories={categories}
+            activeFilterCount={activeFilterCount}
+          />
+        </aside>
+
+        <main>
+          <div className="lux-grid-header">
+            <div className="lux-results-count">
+              {total} <span>Parts found</span>
+            </div>
+            <div className="d-none d-md-block">
+              <select
+                className="lux-select"
+                style={{ width: 220 }}
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option value="-createdAt">Newly listed</option>
+                <option value="createdAt">Oldest</option>
+                <option value="-price">Price: high to low</option>
+                <option value="price">Price: low to high</option>
+                <option value="name">Name A–Z</option>
+                <option value="-name">Name Z–A</option>
+                <option value="-views">Most viewed</option>
+                <option value="views">Least viewed</option>
+              </select>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="lux-empty-state">
+              <div
+                className="spinner-border text-danger"
+                style={{ width: "3rem", height: "3rem" }}
+                role="status"
+              >
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <h3 className="lux-empty-title mt-4">Loading parts</h3>
+            </div>
+          ) : parts.length === 0 ? (
+            <div className="lux-empty-state">
+              <FiPackage className="lux-empty-icon" />
+              <h3 className="lux-empty-title">No matching parts</h3>
+              <p className="lux-empty-desc">
+                Try clearing filters or broadening your search.
+              </p>
+              <button
+                type="button"
+                className="lux-btn-secondary"
+                style={{ maxWidth: 220, margin: "0 auto", display: "block" }}
+                onClick={clearAllFilters}
+              >
+                Reset filters
+              </button>
+            </div>
+          ) : (
+            <div className="lux-auctions-grid">
+              {parts.map((part) => (
+                <PartCardLuxury key={part._id} part={part} />
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 ? (
+            <div className="lux-pagination">
+              <button
+                type="button"
+                className="lux-page-btn"
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Prev
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let start = Math.max(1, page - 2);
+                if (start + 4 > totalPages) start = Math.max(1, totalPages - 4);
+                const pNum = start + i;
+                return (
+                  <button
+                    key={pNum}
+                    type="button"
+                    className={`lux-page-btn ${page === pNum ? "active" : ""}`}
+                    onClick={() => setPage(pNum)}
+                  >
+                    {pNum}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="lux-page-btn"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
+        </main>
+      </div>
+
+      <button
+        type="button"
+        className="lux-fab-filter"
+        onClick={() => setMobileFilterOpen(true)}
+        aria-label="Open filters"
+      >
+        <FiSliders />
+        {filtersOnlyCount > 0 ? (
+          <span
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              background: "#fff",
+              color: "#000",
+              borderRadius: "50%",
+              width: 18,
+              height: 18,
+              fontSize: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+            }}
+          >
+            {filtersOnlyCount}
+          </span>
+        ) : null}
+      </button>
+
+      <PartsLuxuryMobileDock />
+
+      <PartsLuxuryMobileFilterSheet
+        open={mobileFilterOpen}
+        onClose={() => setMobileFilterOpen(false)}
+        filters={filters}
+        setFilters={setFilters}
+        brands={brands}
+        categories={categories}
+        clearAll={clearAllFilters}
+        activeFilterCount={activeFilterCount}
+      />
     </div>
   );
 };

@@ -3,8 +3,9 @@ import { DashboardAppChrome, DashboardMenuButton } from '../../components/Dashbo
 import '../../pages/dashboard.css'
 import { FiTrendingUp, FiDollarSign, FiClock, FiAward, FiEye } from 'react-icons/fi'
 import { MdGavel } from 'react-icons/md'
+import { authFetchInit, getAuthToken } from '../../api/client'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API = import.meta.env.VITE_API_URL || 'https://beep-auctions-backend.onrender.com'
 
 const UserDashboard = () => {
   const [theme, setTheme] = useState(localStorage.getItem('beep-theme') || 'dark')
@@ -27,13 +28,11 @@ const UserDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const token = localStorage.getItem('auth_token')
+      const token = getAuthToken()
       if (!token) return
 
       // Load user's auction activity
-      const response = await fetch(`${API}/api/auctions/user/my-auctions?type=bidding`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await fetch(`${API}/api/auctions/user/my-auctions?type=bidding`, authFetchInit({}))
 
       if (response.ok) {
         const data = await response.json()
@@ -224,7 +223,7 @@ const UserDashboard = () => {
                       transition: 'background 0.2s'
                     }}>
                       <img 
-                        src={auction.carListing?.media?.[0]?.url ? `http://localhost:5000${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
+                        src={auction.carListing?.media?.[0]?.url ? `https://beep-auctions-backend.onrender.com${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
                         alt={auction.carListing?.name}
                         style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                       />
@@ -279,7 +278,7 @@ const UserDashboard = () => {
                           borderRadius: 4 
                         }}></div>
                         <img 
-                          src={auction.carListing?.media?.[0]?.url ? `http://localhost:5000${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
+                          src={auction.carListing?.media?.[0]?.url ? `https://beep-auctions-backend.onrender.com${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
                           alt={auction.carListing?.name}
                           style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                         />
@@ -319,7 +318,7 @@ const UserDashboard = () => {
                     border: '1px solid rgba(255,215,0,0.2)'
                   }}>
                     <img 
-                      src={auction.carListing?.media?.[0]?.url ? `http://localhost:5000${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
+                      src={auction.carListing?.media?.[0]?.url ? `https://beep-auctions-backend.onrender.com${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
                       alt={auction.carListing?.name}
                       style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                     />
@@ -360,7 +359,7 @@ const UserDashboard = () => {
                     border: '1px solid rgba(142,68,173,0.2)'
                   }}>
                     <img 
-                      src={auction.carListing?.media?.[0]?.url ? `http://localhost:5000${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
+                      src={auction.carListing?.media?.[0]?.url ? `https://beep-auctions-backend.onrender.com${auction.carListing.media[0].url}` : '/assets/images/handpicked-img-1.webp'}
                       alt={auction.carListing?.name}
                       style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                     />

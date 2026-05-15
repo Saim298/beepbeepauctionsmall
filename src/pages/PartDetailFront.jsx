@@ -24,12 +24,14 @@ import { HiChevronRight, HiHome } from "react-icons/hi";
 import { BsFacebook, BsTwitterX, BsWhatsapp } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import "./PartDetailFront.css";
+import "./PartDetailAuctionLayout.css";
 import { getAuthToken } from "../api/client.js";
 import { useCart } from "../context/CartContext.jsx";
 import ReviewsList from "../components/ReviewsList.jsx";
 import { MobileBottomBarPartDetail } from "../components/MobileBottomBar";
+import { collectPartImageUrls, toAbsUrl, PART_IMAGE_PLACEHOLDER } from "../utils/partMedia.js";
 
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const apiBase = import.meta.env.VITE_API_URL || "https://beep-auctions-backend.onrender.com";
 
 const CONDITION_MAP = {
   new: { cls: "pdf-badge-red", label: "New", icon: <FiAward size={13} /> },
@@ -42,30 +44,6 @@ const CONDITION_MAP = {
 
 const conditionBadge = (condition) =>
   CONDITION_MAP[condition] || { cls: "pdf-badge-gray", label: condition || "Unknown", icon: <FiPackage size={13} /> };
-
-const toAbs = (url) => {
-  if (!url) return "/assets/images/handpicked-img-1.webp";
-  if (url.startsWith("http") || url.startsWith("data:")) return url;
-  const base = (apiBase || "").replace(/\/$/, "");
-  const path = url.startsWith("/") ? url : `/${url}`;
-  return `${base}${path}`;
-};
-
-const extractHtmlImages = (html = "") => {
-  const regex = /<img[^>]+src="([^"]+)"/g;
-  const images = [];
-  let match;
-  while ((match = regex.exec(html)) !== null) images.push(match[1]);
-  return images;
-};
-
-const getPartImages = (part) => {
-  if (!part) return [];
-  const mediaImages =
-    part.media?.filter((m) => m?.type === "image" || /\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(m?.url || "")).map((m) => m.url) || [];
-  if (mediaImages.length) return mediaImages;
-  return extractHtmlImages(part.descriptionHtml);
-};
 
 function ShareModal({ url, title, onClose }) {
   const [copied, setCopied] = useState(false);
@@ -102,7 +80,7 @@ function ShareModal({ url, title, onClose }) {
 
   return (
     <div className="pdf-overlay" onClick={onClose}>
-      <div className="pdf-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="pdf-modal pdf-modal--dark" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="pdf-modal-close" onClick={onClose} aria-label="Close share modal">
           <FiX size={16} />
         </button>
@@ -144,7 +122,16 @@ function Lightbox({ images, startIdx, onClose }) {
 
   return (
     <div className="pdf-lb-overlay" onClick={onClose}>
-      <img className="pdf-lb-img" src={toAbs(images[index])} alt="" onClick={(e) => e.stopPropagation()} />
+      <img
+        className="pdf-lb-img"
+        src={images[index] || PART_IMAGE_PLACEHOLDER}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+        }}
+      />
       <button type="button" className="pdf-lb-close" onClick={onClose} aria-label="Close image viewer">
         <FiX size={20} />
       </button>
@@ -260,7 +247,17 @@ const PartDetailFront = () => {
       .catch(() => {});
   }, [part]);
 
-  const images = useMemo(() => getPartImages(part), [part]);
+  const displayImages = useMemo(() => {
+    const raw = collectPartImageUrls(part);
+    const urls = raw.map((u) => toAbsUrl(u)).filter(Boolean);
+    return urls.length ? urls : [PART_IMAGE_PLACEHOLDER];
+  }, [part]);
+
+  const sellerAvatarSrc = useMemo(() => {
+    const u = part?.seller?.avatarUrl || part?.seller?.avatarFile;
+    return u ? toAbsUrl(u) : PART_IMAGE_PLACEHOLDER;
+  }, [part]);
+
   const badge = conditionBadge(part?.condition);
   const isSold = part?.status === "sold";
   const inStock =
@@ -340,7 +337,7 @@ const PartDetailFront = () => {
         partId: part._id,
         partName: part.name,
         partPrice: part.price,
-        partImage: images[0] ? toAbs(images[0]) : "/assets/images/handpicked-img-1.webp",
+        partImage: displayImages[0] || PART_IMAGE_PLACEHOLDER,
         vendorId: part.seller?._id,
         vendorName: part.seller?.username,
       },
@@ -368,91 +365,89 @@ const PartDetailFront = () => {
   }
 
   return (
-    <div className="pdf-page mobile-content-pad">
+    <div className="adf-root mobile-content-pad">
       {showShare && <ShareModal url={window.location.href} title={part.name} onClose={() => setShowShare(false)} />}
-      {showLightbox && images.length > 0 && <Lightbox images={images} startIdx={galleryIdx} onClose={() => setShowLightbox(false)} />}
+      {showLightbox && <Lightbox images={displayImages} startIdx={galleryIdx} onClose={() => setShowLightbox(false)} />}
 
-      <header className="pdf-header">
-        <div className="pdf-header-inner">
-          <ul className="pdf-breadcrumb">
-            <li>
-              <Link to="/">
-                <HiHome size={15} /> Home
-              </Link>
-            </li>
-            <li className="pdf-breadcrumb-sep">
-              <HiChevronRight size={12} />
-            </li>
-            <li>
-              <Link to="/parts">Parts</Link>
-            </li>
-            <li className="pdf-breadcrumb-sep">
-              <HiChevronRight size={12} />
-            </li>
-            <li className="pdf-breadcrumb-cur">{part.name}</li>
-          </ul>
-          <div className="pdf-header-badges">
-            <span className={`pdf-badge ${badge.cls}`}>
-              {badge.icon} {badge.label}
-            </span>
-            <span className="pdf-badge pdf-badge-light">
-              <FiEye size={13} /> {part.views || 0} views
-            </span>
-          </div>
+      <header className="adf-header">
+        <nav className="adf-breadcrumb" aria-label="Breadcrumb">
+          <Link to="/">
+            <HiHome size={14} /> Home
+          </Link>
+          <HiChevronRight size={14} />
+          <Link to="/parts">Parts</Link>
+          <HiChevronRight size={14} />
+          <span>{part.name}</span>
+        </nav>
+        <div className="adf-header-actions">
+          <span className="adf-live-badge" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
+            <span className="adf-live-dot" />
+            {isSold ? "Sold" : inStock ? "In stock" : "Unavailable"}
+          </span>
+          <button
+            type="button"
+            className={`adf-header-icon-btn ${saved ? "saved" : ""}`}
+            onClick={toggleSaved}
+            aria-label={saved ? "Unsave" : "Save"}
+          >
+            <FiHeart size={18} />
+          </button>
+          <button type="button" className="adf-header-icon-btn" onClick={() => setShowShare(true)} aria-label="Share">
+            <FiShare2 size={18} />
+          </button>
         </div>
       </header>
 
-      <div className="pdf-shell">
-      <div className="pdf-layout">
-        <section>
-          <div className="pdf-card">
-            <div className="pdf-card-body">
-              <div className="pdf-title-row">
-                <div>
-                  <h1 className="pdf-title">{part.name}</h1>
-                  <div className="pdf-meta-row">
-                    <span className="pdf-meta-item">
-                      <FiMapPin size={13} /> {part.location || "Unknown location"}
-                    </span>
-                    <span className="pdf-meta-item">
-                      <FiPackage size={13} /> Stock: {part.quantity || 0}
-                    </span>
-                  </div>
-                </div>
-                <div className="pdf-action-btns">
-                  <button type="button" className={`pdf-icon-btn ${saved ? "saved" : ""}`} onClick={toggleSaved}>
-                    <FiHeart size={14} /> {saved ? "Saved" : "Save"}
-                  </button>
-                  <button type="button" className="pdf-icon-btn" onClick={() => setShowShare(true)}>
-                    <FiShare2 size={14} /> Share
-                  </button>
-                </div>
+      <div className="adf-layout">
+        <div>
+          <div className="adf-card">
+            <div className="adf-card-pad">
+              <h1 className="adf-car-title">{part.name}</h1>
+              <div className="adf-meta-row">
+                <span className="adf-meta-item">
+                  <FiMapPin size={14} /> {part.location || "Unknown location"}
+                </span>
+                <span className="adf-meta-item">
+                  <FiPackage size={14} /> Stock: {part.quantity || 0}
+                </span>
+                <span className="adf-meta-item">
+                  <FiEye size={14} /> {part.views || 0} views
+                </span>
+                <span className="adf-meta-item">{badge.icon} {badge.label}</span>
               </div>
-              <div className="pdf-quick-tags">
-                <span className="pdf-chip">Free Returns</span>
-                <span className="pdf-chip">Verified Seller</span>
-                <span className="pdf-chip">Secure Checkout</span>
+              <div className="adf-quick-chips" style={{ marginTop: 8 }}>
+                <span className="adf-chip">Free returns</span>
+                <span className="adf-chip">Verified seller</span>
+                <span className="adf-chip">Secure checkout</span>
               </div>
             </div>
 
-            <div className="pdf-gallery-main" onClick={() => setShowLightbox(true)}>
-              <img className="pdf-gallery-img" src={toAbs(images[galleryIdx])} alt={part.name} />
-              <div className="pdf-gallery-tl">
-                <span className={`pdf-badge ${badge.cls}`}>{badge.label}</span>
-              </div>
-              <div className="pdf-gallery-bl">
-                <span className="pdf-gallery-counter">
-                  {Math.min(galleryIdx + 1, images.length || 1)} / {Math.max(images.length, 1)}
+            <div className="adf-gallery-main" onClick={() => setShowLightbox(true)} role="presentation">
+              <img
+                src={displayImages[galleryIdx]}
+                alt={part.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+                }}
+              />
+              <div className="adf-gallery-overlay" aria-hidden />
+              <div className="adf-gallery-badge">
+                <span className="adf-live-badge" style={{ textTransform: "none", letterSpacing: "0" }}>
+                  {badge.label}
                 </span>
               </div>
-              {images.length > 1 && (
+              <div className="adf-gallery-counter">
+                {Math.min(galleryIdx + 1, displayImages.length)} / {displayImages.length}
+              </div>
+              {displayImages.length > 1 && (
                 <>
                   <button
                     type="button"
-                    className="pdf-gallery-nav pdf-gallery-prev"
+                    className="adf-gallery-nav prev"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setGalleryIdx((i) => (i > 0 ? i - 1 : images.length - 1));
+                      setGalleryIdx((i) => (i > 0 ? i - 1 : displayImages.length - 1));
                     }}
                     aria-label="Previous image"
                   >
@@ -460,10 +455,10 @@ const PartDetailFront = () => {
                   </button>
                   <button
                     type="button"
-                    className="pdf-gallery-nav pdf-gallery-next"
+                    className="adf-gallery-nav next"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setGalleryIdx((i) => (i < images.length - 1 ? i + 1 : 0));
+                      setGalleryIdx((i) => (i < displayImages.length - 1 ? i + 1 : 0));
                     }}
                     aria-label="Next image"
                   >
@@ -473,105 +468,119 @@ const PartDetailFront = () => {
               )}
             </div>
 
-            {images.length > 1 && (
-              <div className="pdf-thumbs">
-                {images.map((img, idx) => (
+            {displayImages.length > 1 ? (
+              <div className="adf-thumbnails">
+                {displayImages.map((img, idx) => (
                   <button
                     type="button"
                     key={`${img}-${idx}`}
-                    className={`pdf-thumb ${galleryIdx === idx ? "active" : ""}`}
+                    className={`adf-thumb ${galleryIdx === idx ? "active" : ""}`}
                     onClick={() => setGalleryIdx(idx)}
-                    aria-label={`Open image ${idx + 1}`}
+                    aria-label={`Image ${idx + 1}`}
                   >
-                    <img src={toAbs(img)} alt={`${part.name}-${idx + 1}`} />
+                    <img
+                      src={img}
+                      alt=""
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+                      }}
+                    />
                   </button>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
-          <div className="pdf-card">
-            <div className="pdf-card-body">
-              <div className="pdf-sec-header">
-                <div className="pdf-sec-icon pdf-sec-icon-red">
+          <div className="adf-card" style={{ marginTop: 24 }}>
+            <div className="adf-card-pad">
+              <div className="adf-section-title">
+                <div className="adf-section-icon" aria-hidden>
                   <FiPackage size={18} />
                 </div>
-                <div>
-                  <h3 className="pdf-sec-title">Product details</h3>
-                  <p className="pdf-sec-sub">Everything buyers need to know</p>
-                </div>
+                Product details
               </div>
-              <div className="pdf-specs-grid">
-                <div className="pdf-spec-item">
-                  <div className="pdf-spec-icon">
-                    <FiPackage size={14} />
+              <div className="adf-spec-grid">
+                <div className="adf-spec-card">
+                  <div className="adf-spec-icon">
+                    <FiPackage />
                   </div>
-                  <div>
-                    <div className="pdf-spec-label">Brand</div>
-                    <div className="pdf-spec-value">{part.brand || "N/A"}</div>
-                  </div>
+                  <div className="adf-spec-value">{part.brand || "N/A"}</div>
+                  <div className="adf-spec-label">Brand</div>
                 </div>
-                <div className="pdf-spec-item">
-                  <div className="pdf-spec-icon">
-                    <FiCheckCircle size={14} />
+                <div className="adf-spec-card">
+                  <div className="adf-spec-icon">
+                    <FiCheckCircle />
                   </div>
-                  <div>
-                    <div className="pdf-spec-label">Condition</div>
-                    <div className="pdf-spec-value">{badge.label}</div>
-                  </div>
+                  <div className="adf-spec-value">{badge.label}</div>
+                  <div className="adf-spec-label">Condition</div>
                 </div>
-                <div className="pdf-spec-item">
-                  <div className="pdf-spec-icon">
-                    <FiEye size={14} />
+                <div className="adf-spec-card">
+                  <div className="adf-spec-icon">
+                    <FiEye />
                   </div>
-                  <div>
-                    <div className="pdf-spec-label">Views</div>
-                    <div className="pdf-spec-value">{part.views || 0}</div>
-                  </div>
+                  <div className="adf-spec-value">{part.views || 0}</div>
+                  <div className="adf-spec-label">Views</div>
                 </div>
-                <div className="pdf-spec-item">
-                  <div className="pdf-spec-icon">
-                    <FiMapPin size={14} />
+                <div className="adf-spec-card">
+                  <div className="adf-spec-icon">
+                    <FiMapPin />
                   </div>
-                  <div>
-                    <div className="pdf-spec-label">Location</div>
-                    <div className="pdf-spec-value">{part.location || "N/A"}</div>
-                  </div>
+                  <div className="adf-spec-value">{part.location || "N/A"}</div>
+                  <div className="adf-spec-label">Location</div>
                 </div>
               </div>
 
-              <div style={{ marginTop: 18 }}>
-                <h4 style={{ marginBottom: 10 }}>Description</h4>
-                <div className="pdf-description-html" dangerouslySetInnerHTML={{ __html: part.descriptionHtml || "<p>No description yet.</p>" }} />
+              <div className="adf-section-title" style={{ marginTop: 28 }}>
+                <div className="adf-section-icon" aria-hidden>
+                  <FiPackage size={18} />
+                </div>
+                Description
               </div>
+              <div
+                className="adf-description-html"
+                dangerouslySetInnerHTML={{ __html: part.descriptionHtml || "<p>No description yet.</p>" }}
+              />
             </div>
           </div>
 
-          <div className="pdf-card">
-            <div className="pdf-card-body">
-              <h3 className="pdf-section-title">
-                <FiStar size={22} /> Customer reviews
-              </h3>
+          <div className="adf-card" style={{ marginTop: 24 }}>
+            <div className="adf-card-pad">
+              <div className="adf-section-title">
+                <div className="adf-section-icon" aria-hidden>
+                  <FiStar size={18} />
+                </div>
+                Customer reviews
+              </div>
               <ReviewsList partId={part._id} partOwner={part.seller} currentUser={currentUser} />
             </div>
           </div>
 
           {similarParts.length > 0 && (
-            <div className="pdf-card">
-              <div className="pdf-card-body">
-                <h3 className="pdf-section-title">Similar products</h3>
-                <div className="pdf-similar-grid">
+            <div className="adf-card" style={{ marginTop: 24 }}>
+              <div className="adf-card-pad">
+                <div className="adf-section-title">Similar products</div>
+                <div className="adf-similar-grid">
                   {similarParts.slice(0, 3).map((p) => {
-                    const simImages = getPartImages(p);
+                    const first = collectPartImageUrls(p)[0];
+                    const simSrc = first ? toAbsUrl(first) : PART_IMAGE_PLACEHOLDER;
                     return (
-                      <div key={p._id} className="pdf-spart-card" onClick={() => navigate(`/parts/${p._id}`)}>
-                        <img className="pdf-spart-img" src={toAbs(simImages[0])} alt={p.name} />
-                        <div className="pdf-spart-body">
-                          <h4 className="pdf-spart-name">{p.name}</h4>
-                          <p className="pdf-spart-brand">{p.brand || "No brand"}</p>
-                          <div className="pdf-spart-footer">
-                            <span className="pdf-spart-price">${Number(p.price || 0).toLocaleString()}</span>
-                            <span className={`pdf-badge ${p.quantity > 0 ? "pdf-badge-green" : "pdf-badge-gray"}`}>
+                      <div key={p._id} className="adf-spart-card" onClick={() => navigate(`/parts/${p._id}`)}>
+                        <img
+                          className="adf-spart-img"
+                          src={simSrc}
+                          alt={p.name}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+                          }}
+                        />
+                        <div className="adf-spart-body">
+                          <h4 className="adf-spart-name">{p.name}</h4>
+                          <p className="adf-spart-brand">{p.brand || "No brand"}</p>
+                          <div className="adf-spart-footer">
+                            <span className="adf-spart-price">${Number(p.price || 0).toLocaleString()}</span>
+                            <span className={`adf-status-pill ${p.quantity > 0 ? "in-stock" : "out-stock"}`}>
                               {p.quantity > 0 ? "In stock" : "Out of stock"}
                             </span>
                           </div>
@@ -583,179 +592,207 @@ const PartDetailFront = () => {
               </div>
             </div>
           )}
-        </section>
+        </div>
 
-        <aside>
-          <div className="pdf-card pdf-journey-card">
-            <div className="pdf-card-body">
-              <h3 className="pdf-section-title" style={{ marginBottom: 12 }}>Your Order Preview</h3>
-              <div className="pdf-feature-grid">
-                <div className="pdf-feature-row"><span>Unit price</span><strong>${Number(part.price || 0).toLocaleString()}</strong></div>
-                <div className="pdf-feature-row"><span>Est. / day</span><strong>${dailyPrice}</strong></div>
-                <div className="pdf-feature-row"><span>Quantity</span><strong>{qty}</strong></div>
-                <div className="pdf-feature-row"><span>Total payment</span><strong>${(Number(part.price || 0) * qty).toLocaleString()}</strong></div>
+        <aside className="adf-bid-panel">
+          <div className="adf-card">
+            <div className="adf-card-pad">
+              <div className="adf-section-title" style={{ marginBottom: 16 }}>
+                Order preview
+              </div>
+              <div className="adf-preview-row">
+                <span>Unit price</span>
+                <strong>${Number(part.price || 0).toLocaleString()}</strong>
+              </div>
+              <div className="adf-preview-row">
+                <span>Est. / day</span>
+                <strong>${dailyPrice}</strong>
+              </div>
+              <div className="adf-preview-row">
+                <span>Quantity</span>
+                <strong>{qty}</strong>
+              </div>
+              <div className="adf-preview-row">
+                <span>Total</span>
+                <strong>${(Number(part.price || 0) * qty).toLocaleString()}</strong>
               </div>
             </div>
           </div>
-          <div className="pdf-buybox">
-            <div className="pdf-buybox-top">
-              <div className="pdf-price-lbl">Price</div>
-              <div className="pdf-price">${Number(part.price || 0).toLocaleString()}</div>
-              <div className="pdf-stock-bar-wrap">
-                <div className="pdf-stock-bar-labels">
-                  <span>Availability</span>
-                  <span>{part.quantity || 0} items</span>
-                </div>
-                <div className="pdf-stock-bar-bg">
-                  <div className="pdf-stock-bar-fill" style={{ width: `${stockPercent}%` }} />
-                </div>
+
+          <div className="adf-card adf-current-bid-card">
+            <div className="adf-bid-label">Price</div>
+            <div className="adf-bid-amount">
+              <span>$</span>
+              {Number(part.price || 0).toLocaleString()}
+            </div>
+            <div className="adf-bid-meta">Secure checkout · Buyer protection</div>
+
+            <div className="adf-stock-bar-wrap">
+              <div className="adf-stock-bar-labels">
+                <span>Availability</span>
+                <span>{part.quantity || 0} in stock</span>
+              </div>
+              <div className="adf-stock-bar-bg">
+                <div className="adf-stock-bar-fill" style={{ width: `${stockPercent}%` }} />
               </div>
             </div>
 
-            <div className="pdf-buybox-body">
-              <div className="pdf-status-pills">
-                <span
-                  className={`pdf-status-pill ${isSold ? "out-stock" : inStock ? "in-stock" : "out-stock"}`}
-                >
-                  {isSold ? "Sold" : inStock ? "In stock" : "Out of stock"}
-                </span>
-                {isInCart(part._id) && <span className="pdf-status-pill in-cart">Already in cart</span>}
-              </div>
+            <div className="adf-status-pills" style={{ marginTop: 18 }}>
+              <span className={`adf-status-pill ${isSold ? "out-stock" : inStock ? "in-stock" : "out-stock"}`}>
+                {isSold ? "Sold" : inStock ? "In stock" : "Out of stock"}
+              </span>
+              {isInCart(part._id) ? <span className="adf-status-pill in-cart">In cart</span> : null}
+            </div>
 
-              {ownPart ? (
-                <div className="pdf-own-alert">This is your own listing. Buyer actions are disabled.</div>
-              ) : (
-                <>
-                  <div className="pdf-qty-row">
-                    <button type="button" className="pdf-qty-btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
-                      -
-                    </button>
-                    <input
-                      className="pdf-qty-inp"
-                      type="number"
-                      value={qty}
-                      min={1}
-                      max={Math.max(1, part.quantity || 1)}
-                      onChange={(e) => setQty(Math.max(1, Math.min(Number(e.target.value || 1), Math.max(1, part.quantity || 1))))}
-                    />
-                    <button
-                      type="button"
-                      className="pdf-qty-btn"
-                      onClick={() => setQty((q) => Math.min(Math.max(1, part.quantity || 1), q + 1))}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="pdf-qty-total">Subtotal: ${(Number(part.price || 0) * qty).toLocaleString()}</div>
-                </>
-              )}
+            {ownPart ? (
+              <div className="adf-own-alert">This is your listing — buyer actions are disabled.</div>
+            ) : (
+              <>
+                <div className="adf-qty-row">
+                  <button type="button" className="adf-qty-btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                    −
+                  </button>
+                  <input
+                    className="adf-qty-inp"
+                    type="number"
+                    value={qty}
+                    min={1}
+                    max={Math.max(1, part.quantity || 1)}
+                    onChange={(e) =>
+                      setQty(
+                        Math.max(1, Math.min(Number(e.target.value || 1), Math.max(1, part.quantity || 1)))
+                      )
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="adf-qty-btn"
+                    onClick={() => setQty((q) => Math.min(Math.max(1, part.quantity || 1), q + 1))}
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="adf-subtotal">Subtotal · ${(Number(part.price || 0) * qty).toLocaleString()}</div>
+              </>
+            )}
 
-              {authLoading ? (
-                <button type="button" className="pdf-btn-disabled" disabled>
-                  Checking sign-in...
+            {authLoading ? (
+              <button type="button" className="adf-btn-disabled" disabled>
+                Checking sign-in…
+              </button>
+            ) : !currentUser ? (
+              <button type="button" className="adf-btn-chat" onClick={() => navigate("/signin")}>
+                Sign in to buy
+              </button>
+            ) : canBuy ? (
+              <>
+                <button type="button" className="adf-btn-bid" onClick={buyNow} disabled={buyingNow}>
+                  <FiShoppingCart size={18} />
+                  {buyingNow ? "Starting checkout…" : "Buy now"}
                 </button>
-              ) : !currentUser ? (
-                <button type="button" className="pdf-btn-chat" onClick={() => navigate("/signin")}>
-                  Sign in to buy
-                </button>
-              ) : canBuy ? (
-                <>
                 <button
                   type="button"
-                  className="pdf-btn-add"
-                  onClick={buyNow}
-                  disabled={buyingNow}
+                  className={`adf-btn-add ${isInCart(part._id) ? "in-cart" : ""}`}
+                  onClick={addCart}
+                  disabled={adding}
                 >
                   <FiShoppingCart size={16} />
-                  {buyingNow ? "Starting checkout..." : "Buy Now"}
+                  {adding ? "Adding…" : isInCart(part._id) ? "In cart" : "Add to cart"}
                 </button>
-                <button type="button" className={`pdf-btn-add ${isInCart(part._id) ? "in-cart" : ""}`} onClick={addCart} disabled={adding}>
-                  <FiShoppingCart size={16} />
-                  {adding ? "Adding..." : isInCart(part._id) ? "In Cart" : "Add to Cart"}
-                </button>
-                </>
-              ) : (
-                <button type="button" className="pdf-btn-disabled" disabled>
-                  {ownPart ? "Your Listing" : isSold ? "Sold" : "Sold Out"}
-                </button>
-              )}
+              </>
+            ) : (
+              <button type="button" className="adf-btn-disabled" disabled>
+                {ownPart ? "Your listing" : isSold ? "Sold" : "Sold out"}
+              </button>
+            )}
 
-              {!ownPart && (
-                <button type="button" className="pdf-btn-chat" onClick={chatSeller}>
-                  <FiMessageSquare size={16} /> Chat with Seller
-                </button>
-              )}
+            {!ownPart ? (
+              <button type="button" className="adf-btn-chat" onClick={chatSeller}>
+                <FiMessageSquare size={16} /> Chat with seller
+              </button>
+            ) : null}
 
-              <div className="pdf-trust-row">
-                <span className="pdf-trust-item">
-                  <FiTruck size={13} /> Fast shipping
-                </span>
-                <span className="pdf-trust-item">
-                  <FiCheckCircle size={13} /> Verified listing
-                </span>
-              </div>
-              <div className="pdf-accordion">
-                <details open>
-                  <summary>Product Description</summary>
-                  <p>{part.descriptionHtml ? "See full description in details section." : "No detailed description provided yet."}</p>
-                </details>
-                <details>
-                  <summary>Product Details</summary>
-                  <p>Brand: {part.brand || "N/A"} · Condition: {badge.label} · Stock: {part.quantity || 0}</p>
-                </details>
-                <details>
-                  <summary>Our Commitment</summary>
-                  <p>Secure payments, verified sellers, and responsive support on every order.</p>
+            <div className="adf-trust-row">
+              <span className="adf-trust-item">
+                <FiTruck size={14} /> Fast shipping
+              </span>
+              <span className="adf-trust-item">
+                <FiCheckCircle size={14} /> Verified listing
+              </span>
+            </div>
+
+            <div className="adf-card" style={{ marginTop: 16, background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="adf-card-pad" style={{ paddingTop: 16, paddingBottom: 16 }}>
+                <details style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 600, color: "#fff" }}>Quick facts</summary>
+                  <p style={{ marginTop: 10, marginBottom: 0 }}>
+                    Brand: {part.brand || "N/A"} · Condition: {badge.label} · Stock: {part.quantity || 0}
+                  </p>
                 </details>
               </div>
             </div>
           </div>
 
-          <div className="pdf-card">
-            <div className="pdf-card-body">
-              <div className="pdf-sec-header">
-                <div className="pdf-sec-icon pdf-sec-icon-green">
+          <div className="adf-card">
+            <div className="adf-card-pad">
+              <div className="adf-section-title">
+                <div className="adf-section-icon" aria-hidden>
                   <FiMessageSquare size={18} />
                 </div>
-                <div>
-                  <h3 className="pdf-sec-title">Seller info</h3>
-                  <p className="pdf-sec-sub">Trusted marketplace vendor</p>
-                </div>
+                Seller
               </div>
-              <div className="pdf-seller-row">
-                <img className="pdf-seller-avatar" src={toAbs(part.seller?.avatarUrl)} alt={part.seller?.username || "Seller"} />
+              <div className="adf-seller-row">
+                <div className="adf-seller-avatar">
+                  <img
+                    src={sellerAvatarSrc}
+                    alt=""
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+                    }}
+                  />
+                </div>
                 <div>
-                  <p className="pdf-seller-name">{part.seller?.username || "Seller"}</p>
-                  <div className="pdf-seller-meta">
-                    <span className="pdf-meta-item">
-                      <FiMapPin size={12} /> {part.seller?.location || "Unknown"}
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#fff" }}>
+                    {part.seller?.username || "Seller"}
+                  </div>
+                  <span className="adf-verified-badge">Verified</span>
+                  <div className="adf-meta-row" style={{ marginTop: 8, marginBottom: 0 }}>
+                    <span className="adf-meta-item">
+                      <FiMapPin size={14} /> {part.seller?.location || "Location unknown"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {sellerProducts.length > 0 && (
-                <div style={{ marginTop: 14 }}>
+              {sellerProducts.length > 0 ? (
+                <div style={{ marginTop: 16 }}>
                   {sellerProducts.map((sp) => {
-                    const imgs = getPartImages(sp);
+                    const firstSp = collectPartImageUrls(sp)[0];
+                    const miniSrc = firstSp ? toAbsUrl(firstSp) : PART_IMAGE_PLACEHOLDER;
                     return (
-                      <div key={sp._id} className="pdf-mini-prod" onClick={() => navigate(`/parts/${sp._id}`)}>
-                        <img className="pdf-mini-prod-img" src={toAbs(imgs[0])} alt={sp.name} />
+                      <div key={sp._id} className="adf-mini-prod" onClick={() => navigate(`/parts/${sp._id}`)}>
+                        <img
+                          className="adf-mini-prod-img"
+                          src={miniSrc}
+                          alt=""
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = PART_IMAGE_PLACEHOLDER;
+                          }}
+                        />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, color: "#111", fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {sp.name}
-                          </div>
-                          <div style={{ color: "#6b7280", fontSize: 12 }}>${Number(sp.price || 0).toLocaleString()}</div>
+                          <div className="adf-mini-prod-name">{sp.name}</div>
+                          <div className="adf-mini-prod-price">${Number(sp.price || 0).toLocaleString()}</div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </aside>
-      </div>
       </div>
 
       <MobileBottomBarPartDetail onPrimaryAction={buyNow} isInCart={false} canBuy={canBuy} />

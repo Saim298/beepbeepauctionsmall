@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext.jsx";
 import Home from "./pages/Home.jsx";
 import Signin from "./pages/Signin.jsx";
@@ -19,36 +19,41 @@ import PartDetailFront from "./pages/PartDetailFront.jsx";
 
 import RoleSelect from "./pages/RoleSelect.jsx";
 import Settings from "./pages/Settings.jsx";
+import DashboardNotifications from "./pages/DashboardNotifications.jsx";
 
 import Contact from "./pages/Contact.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import ComingSoon from "./pages/ComingSoon.jsx";
 import Chat from "./pages/Chat.jsx";
-import Cart from "./pages/Cart.jsx";
-import Checkout from "./pages/Checkout.jsx";
+import CartFront from "./pages/CartFront.jsx";
+import CheckoutFront from "./pages/CheckoutFront.jsx";
 import MyReviews from "./pages/MyReviews.jsx";
 import OAuthSuccess from "./pages/OAuthSuccess.jsx";
 import BuyerOrders from "./pages/user/BuyerOrders.jsx";
 import SellerOrders from "./pages/user/SellerOrders.jsx";
-import CartFront from "./pages/CartFront.jsx";
-import CheckoutFront from "./pages/CheckoutFront.jsx";
 import CloverCheckoutSuccess from "./pages/CloverCheckoutSuccess.jsx";
 import CloverCheckoutFailure from "./pages/CloverCheckoutFailure.jsx";
 import CloverOAuthStart from "./pages/CloverOAuthStart.jsx";
 import CloverOAuthCallback from "./pages/CloverOAuthCallback.jsx";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 
 function App() {
   return (
     <>
       <CartProvider>
+        <NotificationProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signin" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/oauth-start" element={<CloverOAuthStart />} />
             <Route path="/oauth-clover-callback" element={<CloverOAuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/notifications" element={<DashboardNotifications />} />
             <Route path="/user/listings/new" element={<UserAddCar />} />
             <Route path="/user/listings" element={<MyListings />} />
             <Route path="/user/dashboard" element={<UserDashboard />} />
@@ -84,12 +89,14 @@ function App() {
             <Route path="/select-role" element={<RoleSelect />} />
             <Route path="/dashboard/settings" element={<Settings />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/coming-soon" element={<ComingSoon />} />
 
             {/* Catch all other undefined routes and redirect to coming-soon */}
             <Route path="*" element={<ComingSoon />} />
           </Routes>
         </BrowserRouter>
+        </NotificationProvider>
       </CartProvider>
     </>
   );
